@@ -86,8 +86,7 @@ public class CommandParser {
             stub.createAccount(CreateAccountRequest.newBuilder().setUserId(username).build());
             System.out.println("OK");
         } catch (StatusRuntimeException e) {
-            System.out.println("Caught exception with description: " +
-                    e.getStatus().getDescription());
+            System.out.println(e.getStatus().getDescription());
         }
     }
 
@@ -101,13 +100,17 @@ public class CommandParser {
         String server = split[1];
         String username = split[2];
 
-        stub.deleteAccount(DeleteAccountRequest.newBuilder().setUserId(username).build());
+        try{
+            stub.deleteAccount(DeleteAccountRequest.newBuilder().setUserId(username).build());
+            System.out.println("OK");
+        } catch (StatusRuntimeException e) {
+            System.out.println(e.getStatus().getDescription());
+        }
     }
 
 
     private void balance(String line) {
         String[] split = line.split(SPACE);
-        int balance=-1;
 
         if (split.length != 3) {
             this.printUsage();
@@ -117,12 +120,12 @@ public class CommandParser {
         String username = split[2];
 
        try{
-           balance = stub.balance(BalanceRequest.newBuilder().setUserId(username).build()).getValue();
+           int balance = stub.balance(BalanceRequest.newBuilder().setUserId(username).build()).getValue();
            System.out.println("OK");
+           System.out.println(balance);
 
        } catch (StatusRuntimeException e) {
-           System.out.println("Caught exception with description: " +
-                   e.getStatus().getDescription());
+           System.out.println(e.getStatus().getDescription());
        }
     }
 
@@ -137,8 +140,12 @@ public class CommandParser {
         String from = split[2];
         String dest = split[3];
         Integer amount = Integer.valueOf(split[4]);
-
-        stub.transferTo(TransferToRequest.newBuilder().setAccountFrom(from).setAccountTo(dest).setAmount(amount).build());
+        try{
+            stub.transferTo(TransferToRequest.newBuilder().setAccountFrom(from).setAccountTo(dest).setAmount(amount).build());
+            System.out.println("OK");
+        } catch (StatusRuntimeException e) {
+            System.out.println(e.getStatus().getDescription());
+        }
     }
 
     private void printUsage() {

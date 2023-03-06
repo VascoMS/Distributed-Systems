@@ -66,9 +66,14 @@ public class ServerState {
         if(!userAccounts.containsKey(username)){
             return OperationResult.NO_ACCOUNT_FOUND;
         }
-        DeleteOp deleteOp = new DeleteOp(username);
-        ledger.add(deleteOp);
-        userAccounts.remove(username);
-        return OperationResult.OK;
+        if(userAccounts.get(username) != 0){
+            return OperationResult.AMOUNT_NOT_0;
+        }
+        else {
+            DeleteOp deleteOp = new DeleteOp(username);
+            ledger.add(deleteOp);
+            userAccounts.remove(username);
+            return OperationResult.OK;
+        }
     }
 }

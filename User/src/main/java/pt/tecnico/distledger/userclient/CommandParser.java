@@ -20,7 +20,9 @@ public class CommandParser {
         this.userService = userService;
     }
 
-    void parseInput() {
+    void parseInput(String host, int port) {
+
+        userService.createChannelAndStub(host, port);
 
         Scanner scanner = new Scanner(System.in);
         boolean exit = false;
@@ -54,6 +56,7 @@ public class CommandParser {
 
                     case EXIT:
                         exit = true;
+                        userService.shutdownChannel();
                         break;
 
                     default:
@@ -64,6 +67,7 @@ public class CommandParser {
                 System.err.println(e.getMessage());
             }
         }
+
     }
 
     private void createAccount(String line){

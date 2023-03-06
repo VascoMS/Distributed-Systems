@@ -19,7 +19,7 @@ code dependency management, to ensure your code runs using the correct component
 | Number | Name                      | User                             | Email                             |
 |-------|---------------------------|----------------------------------|-----------------------------------|
 | 99046 | Afonso Ponces de Carvalho | <https://github.com/Ponces2002>  | <mailto:afonsopcarvalho@tecnico.ulisboa.pt> |
-| 99132 | Vasco Silva               | <https://github.com/BobUser>     | <mailto:vasco.magalhaes.silva@tecnico.ulisboa.pt>      |
+| 99132 | Vasco Silva               | <https://github.com/VascoMS>     | <mailto:vasco.magalhaes.silva@tecnico.ulisboa.pt>      |
 | 99135 | Vicente Gomes             | <https://github.com/Vicente-Gomes> | <mailto:vicente.franco.gomes@tecnico.ulisboa.pt>      |
 
 ## Getting Started

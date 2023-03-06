@@ -12,13 +12,15 @@ public class UserService {
     private ManagedChannel channel;
     private UserServiceGrpc.UserServiceBlockingStub stub;
 
-    public void createChannelAndStub(String host, int port) {
+    public UserServiceGrpc.UserServiceBlockingStub createChannelAndStub(String host, int port) {
 
         final String target = host + ":" + port;
 
         this.channel = ManagedChannelBuilder.forTarget(target).usePlaintext().build();
 
-         this.stub = UserServiceGrpc.newBlockingStub(channel);
+        this.stub = UserServiceGrpc.newBlockingStub(channel);
+
+        return this.stub;
     }
 
     public void shutdownChannel(){

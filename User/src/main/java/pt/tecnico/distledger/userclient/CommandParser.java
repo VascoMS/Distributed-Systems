@@ -1,6 +1,8 @@
 package pt.tecnico.distledger.userclient;
 
+import io.grpc.StatusRuntimeException;
 import pt.tecnico.distledger.userclient.grpc.UserService;
+import pt.ulisboa.tecnico.distledger.contract.user.*;
 
 import java.util.Scanner;
 
@@ -15,6 +17,7 @@ public class CommandParser {
     private static final String EXIT = "exit";
 
     private final UserService userService;
+    private UserServiceGrpc.UserServiceBlockingStub stub;
 
     public CommandParser(UserService userService) {
         this.userService = userService;
@@ -22,7 +25,7 @@ public class CommandParser {
 
     void parseInput(String host, int port) {
 
-        userService.createChannelAndStub(host, port);
+        this.stub = userService.createChannelAndStub(host, port);
 
         Scanner scanner = new Scanner(System.in);
         boolean exit = false;
@@ -32,7 +35,7 @@ public class CommandParser {
             String line = scanner.nextLine().trim();
             String cmd = line.split(SPACE)[0];
 
-            try{
+            try {
                 switch (cmd) {
                     case CREATE_ACCOUNT:
                         this.createAccount(line);
@@ -62,59 +65,71 @@ public class CommandParser {
                     default:
                         break;
                 }
-            }
-            catch (Exception e){
+            } catch (Exception e) {
                 System.err.println(e.getMessage());
             }
         }
 
     }
 
-    private void createAccount(String line){
+    private void createAccount(String line) {
         String[] split = line.split(SPACE);
 
-        if (split.length != 3){
+        if (split.length != 3) {
             this.printUsage();
             return;
         }
 
         String server = split[1];
         String username = split[2];
-
-        System.out.println("TODO: implement createAccount command");
+        try{
+            stub.createAccount(CreateAccountRequest.newBuilder().setUserId(username).build());
+            System.out.println("OK");
+        } catch (StatusRuntimeException e) {
+            System.out.println("Caught exception with description: " +
+                    e.getStatus().getDescription());
+        }
     }
 
-    private void deleteAccount(String line){
+    private void deleteAccount(String line) {
         String[] split = line.split(SPACE);
 
-        if (split.length != 3){
+        if (split.length != 3) {
             this.printUsage();
             return;
         }
         String server = split[1];
         String username = split[2];
 
-        System.out.println("TODO: implement deleteAccount command");
+        stub.deleteAccount(DeleteAccountRequest.newBuilder().setUserId(username).build());
     }
 
 
-    private void balance(String line){
+    private void balance(String line) {
         String[] split = line.split(SPACE);
+        int balance=-1;
 
-        if (split.length != 3){
+        if (split.length != 3) {
             this.printUsage();
             return;
         }
         String server = split[1];
         String username = split[2];
 
-        System.out.println("TODO: implement balance command");
+       try{
+           balance = stub.balance(BalanceRequest.newBuilder().setUserId(username).build()).getValue();
+           System.out.println("OK");
+
+       } catch (StatusRuntimeException e) {
+           System.out.println("Caught exception with description: " +
+                   e.getStatus().getDescription());
+       }
     }
 
-    private void transferTo(String line){
+    private void transferTo(String line) {
         String[] split = line.split(SPACE);
 
-        if (split.length != 5){
+        if (split.length != 5) {
             this.printUsage();
             return;
         }
@@ -123,15 +138,15 @@ public class CommandParser {
         String dest = split[3];
         Integer amount = Integer.valueOf(split[4]);
 
-        System.out.println("TODO: implement transferTo command");
+        stub.transferTo(TransferToRequest.newBuilder().setAccountFrom(from).setAccountTo(dest).setAmount(amount).build());
     }
 
     private void printUsage() {
         System.out.println("Usage:\n" +
-                        "- createAccount <server> <username>\n" +
-                        "- deleteAccount <server> <username>\n" +
-                        "- balance <server> <username>\n" +
-                        "- transferTo <server> <username_from> <username_to> <amount>\n" +
-                        "- exit\n");
+                "- createAccount <server> <username>\n" +
+                "- deleteAccount <server> <username>\n" +
+                "- balance <server> <username>\n" +
+                "- transferTo <server> <username_from> <username_to> <amount>\n" +
+                "- exit\n");
     }
 }

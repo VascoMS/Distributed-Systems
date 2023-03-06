@@ -1,6 +1,7 @@
 syntax = "proto3";
 package pt.ulisboa.tecnico.distledger.contract.user;
 
+option java_multiple_files = true;
 // User Interface of the DistLedger Service
 
 message BalanceRequest {
@@ -30,6 +31,16 @@ message TransferToRequest {
 }
 
 message TransferToResponse {}
+
+enum OperationResult {
+  OK = 0;
+  ACCOUNT_ALREADY_EXISTS = 1;
+  NO_ACCOUNT_FOUND = 2;
+  RECEIVER_NOT_FOUND = 3;
+  SENDER_NOT_FOUND = 4;
+  NOT_ENOUGH_MONEY = 5;
+  AMOUNT_NOT_0 = 6;
+};
 
 service UserService {
   rpc balance(BalanceRequest) returns (BalanceResponse);

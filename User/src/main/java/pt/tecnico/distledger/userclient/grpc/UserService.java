@@ -2,6 +2,7 @@ package pt.tecnico.distledger.userclient.grpc;
 
 import io.grpc.ManagedChannel;
 import io.grpc.ManagedChannelBuilder;
+import io.grpc.StatusRuntimeException;
 import pt.ulisboa.tecnico.distledger.contract.user.*;
 
 public class UserService {
@@ -43,7 +44,7 @@ public class UserService {
         }
     }
 
-    public void balance(String Username) {
+    public void balance(String username) {
         try{
            int balance = stub.balance(BalanceRequest.newBuilder().setUserId(username).build()).getValue();
            System.out.println("OK");

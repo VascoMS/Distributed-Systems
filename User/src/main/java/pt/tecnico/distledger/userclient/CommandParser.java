@@ -2,7 +2,6 @@ package pt.tecnico.distledger.userclient;
 
 import io.grpc.StatusRuntimeException;
 import pt.tecnico.distledger.userclient.grpc.UserService;
-import pt.ulisboa.tecnico.distledger.contract.user.*;
 
 import java.util.Scanner;
 
@@ -17,7 +16,6 @@ public class CommandParser {
     private static final String EXIT = "exit";
 
     private final UserService userService;
-    private UserServiceGrpc.UserServiceBlockingStub stub;
 
     public CommandParser(UserService userService) {
         this.userService = userService;
@@ -25,7 +23,7 @@ public class CommandParser {
 
     void parseInput(String host, int port) {
 
-        this.stub = userService.createChannelAndStub(host, port);
+        userService.createChannelAndStub(host, port);
 
         Scanner scanner = new Scanner(System.in);
         boolean exit = false;

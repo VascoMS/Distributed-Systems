@@ -1,5 +1,12 @@
 package pt.tecnico.distledger.adminclient.grpc;
 
+import io.grpc.ManagedChannel;
+import io.grpc.ManagedChannelBuilder;
+import io.grpc.StatusRuntimeException;
+import pt.ulisboa.tecnico.distledger.contract.DistLedgerCommonDefinitions;
+import pt.ulisboa.tecnico.distledger.contract.admin.*;
+
+
 public class AdminService {
 
     /* TODO: The gRPC client-side logic should be here.
@@ -7,7 +14,7 @@ public class AdminService {
         as well as individual methods for each remote operation of this service. */
 
     private ManagedChannel channel;
-    private UserServiceGrpc.AdminServiceBlockingStub stub;
+    private AdminServiceGrpc.AdminServiceBlockingStub stub;
 
     public void createChannelAndStub(String host, int port) {
 
@@ -25,10 +32,10 @@ public class AdminService {
 
     public void activate() {
         try{
-           stub.activate(ActivateRequest.getDefaultInstance());
-           System.out.println("OK");
+            stub.activate(ActivateRequest.getDefaultInstance());
+            System.out.println("OK");
         } catch (StatusRuntimeException e) {
-           System.out.println(e.getStatus().getDescription());
+            System.out.println(e.getStatus().getDescription());
         }
     }
 
@@ -41,13 +48,13 @@ public class AdminService {
         }
     }
 
-    public void dump() {
+    /*public void dump() {
         try{
-           String ledger = stup.getLedgerState(getLedgerStateRequest.newBuilder().buil()).getLedgerState();
+           LedgerState ledger = stub.getLedgerState(getLedgerStateRequest.getDefaultInstance()).getLedgerState();
            System.out.println("OK");
            System.out.println(ledger);
         } catch (StatusRuntimeException e) {
            System.out.println(e.getStatus().getDescription());
         }
-    }
+    }*/
 }

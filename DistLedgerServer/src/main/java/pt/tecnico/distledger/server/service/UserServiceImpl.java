@@ -9,7 +9,11 @@ import static io.grpc.Status.UNAVAILABLE;
 
 public class UserServiceImpl extends UserServiceGrpc.UserServiceImplBase {
 
-    private ServerState server = new ServerState();
+    private final ServerState server;
+
+    public UserServiceImpl(ServerState server) {
+        this.server = server;
+    }
 
     @Override
     public void balance(BalanceRequest request, StreamObserver<BalanceResponse> responseObserver) {

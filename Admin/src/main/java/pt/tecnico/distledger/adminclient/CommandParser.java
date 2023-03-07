@@ -15,13 +15,12 @@ public class CommandParser {
     private static final String EXIT = "exit";
 
     private final AdminService adminService;
-    private AdminServiceGrpc.AdminServiceBlockingStub stub;
     public CommandParser(AdminService adminService) {
         this.adminService = adminService;
     }
     void parseInput(String host, int port) {
 
-        this.stub = AdminService.createChannelAndStub(host, port);
+        adminService.createChannelAndStub(host, port);
 
         Scanner scanner = new Scanner(System.in);
         boolean exit = false;
@@ -97,7 +96,7 @@ public class CommandParser {
         }
         String server = split[1];
 
-        adminService.dump();
+        //adminService.dump();
     }
 
     @SuppressWarnings("unused")

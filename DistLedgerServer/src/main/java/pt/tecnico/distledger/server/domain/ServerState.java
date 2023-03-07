@@ -5,6 +5,7 @@ import pt.tecnico.distledger.server.domain.operation.DeleteOp;
 import pt.tecnico.distledger.server.domain.operation.Operation;
 import pt.tecnico.distledger.server.domain.operation.TransferOp;
 import pt.ulisboa.tecnico.distledger.contract.user.OperationResult;
+import pt.ulisboa.tecnico.distledger.contract.admin.AdminOperationResult;
 
 import java.util.ArrayList;
 import java.util.HashMap;
@@ -16,7 +17,7 @@ public class ServerState {
     private Map<String,Integer> userAccounts;
     private boolean serverAvailable;
 
-    public serverAvailable() {
+    public ServerState() {
         this.ledger = new ArrayList<>();
         this.userAccounts = new HashMap<>();
         this.userAccounts.put("broker",1000);
@@ -27,14 +28,15 @@ public class ServerState {
          as well as the methods to access and interact with the state. */
 
     public boolean getServerAvailable() {
-        return this.serverAvailable;
+        return serverAvailable;
     }
 
     public OperationResult createAccount(String username) {
+        System.out.println("create account called server status: " + this.serverAvailable);
         if(!getServerAvailable()){
             return OperationResult.SERVER_OFF;
         }
-        if(userAccounts.containsKey(username)){
+        else if(userAccounts.containsKey(username)){
             return OperationResult.ACCOUNT_ALREADY_EXISTS;
         }
         else{
@@ -63,7 +65,7 @@ public class ServerState {
         if(!getServerAvailable()){
             return OperationResult.SERVER_OFF;
         }
-        if(!userAccounts.containsKey(from)){
+        else if(!userAccounts.containsKey(from)){
             return OperationResult.SENDER_NOT_FOUND;
         }
         else if(!userAccounts.containsKey(to)){
@@ -100,31 +102,33 @@ public class ServerState {
         }
     }
 
-    public OperationResult activateServer() {
+    public AdminOperationResult activateServer() {
         if(getServerAvailable()){
-            return OperationResult.SERVER_ALREADY_ACTIVE;
+            return AdminOperationResult.SERVER_ALREADY_ACTIVE;
         }
         else{
-            this.serverAvailable = true;
-            return OperationResult.OK;
+            serverAvailable = true;
+            return AdminOperationResult.OK;
         }
     }
 
-    public OperationResult deactivateServer() {
+    public AdminOperationResult deactivateServer() {
         if(!getServerAvailable()){
-            return OperationResult.SERVER_ALREADY_INACTIVE;
+            return AdminOperationResult.SERVER_ALREADY_INACTIVE;
         }
         else{
-            this.serverAvailable = false;
-            return OperationResult.OK;
+            System.out.println("server deactivated");
+            serverAvailable = false;
+            return AdminOperationResult.OK;
         }
     }
 
     public String getLedger() {
-        String ledger = "ledgerState {";
+        StringBuilder ledger = new StringBuilder("ledgerState {");
         for(Operation operation : this.ledger){
-            ledger += "\n" + operation.toString();
+            ledger.append("\n").append(operation.toString());
         }
-        ledger += "\n}";
+        ledger.append("\n}");
+        return ledger.toString();
     }
 }

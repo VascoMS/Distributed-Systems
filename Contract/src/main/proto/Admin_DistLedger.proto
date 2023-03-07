@@ -1,6 +1,7 @@
 syntax = "proto3";
 package pt.ulisboa.tecnico.distledger.contract.admin;
 
+option java_multiple_files = true;
 import "DistLedgerCommonDefinitions.proto";
 
 // Administrator Interface of the DistLedger Service
@@ -23,12 +24,13 @@ message getLedgerStateResponse {
   LedgerState ledgerState = 1;
 }
 
-enum OperationResult{
+enum AdminOperationResult{
+  OK = 0;
   SERVER_ALREADY_ACTIVE = 1;
   SERVER_ALREADY_INACTIVE = 2;
   DELETE_BROKER = 3;
   SERVER_OFF = 4;
-}
+};
 
 service AdminService {
   rpc activate(ActivateRequest) returns (ActivateResponse);

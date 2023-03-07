@@ -24,7 +24,7 @@ public class AdminClientMain {
         final int port = Integer.parseInt(args[1]);
 
         CommandParser parser = new CommandParser(new AdminService());
-        parser.parseInput();
+        parser.parseInput(host, port);
 
     }
 }

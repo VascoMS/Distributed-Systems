@@ -14,17 +14,26 @@ import java.util.Map;
 public class ServerState {
     private List<Operation> ledger;
     private Map<String,Integer> userAccounts;
+    private boolean serverAvailable;
 
-    public ServerState() {
+    public serverAvailable() {
         this.ledger = new ArrayList<>();
         this.userAccounts = new HashMap<>();
         this.userAccounts.put("broker",1000);
+        this.serverAvailable = true;
     }
 
     /* TODO: Here should be declared all the server state attributes
          as well as the methods to access and interact with the state. */
 
+    public boolean getServerAvailable() {
+        return this.serverAvailable;
+    }
+
     public OperationResult createAccount(String username) {
+        if(!getServerAvailable()){
+            return OperationResult.SERVER_OFF;
+        }
         if(userAccounts.containsKey(username)){
             return OperationResult.ACCOUNT_ALREADY_EXISTS;
         }
@@ -35,17 +44,25 @@ public class ServerState {
             return OperationResult.OK;
         }
     }
+    
+    public OperationResult balanceVerification(String userId){
+        if(!getServerAvailable()){
+            return OperationResult.SERVER_OFF;
+        }
+        else if(!userAccounts.containsKey(userId)){
+            return OperationResult.NO_ACCOUNT_FOUND;
+        }
+        else return OperationResult.OK;
+    }
 
     public synchronized int getBalance(String userId){
-        if(userAccounts.containsKey(userId)){
-            return userAccounts.get(userId);
-        }
-        else{
-            return -1;
-        }
+        return userAccounts.get(userId);
     }
 
     public OperationResult transferTo(String from, String to, int amount) {
+        if(!getServerAvailable()){
+            return OperationResult.SERVER_OFF;
+        }
         if(!userAccounts.containsKey(from)){
             return OperationResult.SENDER_NOT_FOUND;
         }
@@ -63,11 +80,17 @@ public class ServerState {
     }
 
     public OperationResult deleteAccount(String username) {
-        if(!userAccounts.containsKey(username)){
+        if(!getServerAvailable()){
+            return OperationResult.SERVER_OFF;
+        }
+        else if(!userAccounts.containsKey(username)){
             return OperationResult.NO_ACCOUNT_FOUND;
         }
-        if(userAccounts.get(username) != 0){
+        else if(userAccounts.get(username) != 0){
             return OperationResult.AMOUNT_NOT_0;
+        }
+        else if(username.compareTo("broker") == 0){
+            return OperationResult.DELETE_BROKER;
         }
         else {
             DeleteOp deleteOp = new DeleteOp(username);
@@ -75,5 +98,33 @@ public class ServerState {
             userAccounts.remove(username);
             return OperationResult.OK;
         }
+    }
+
+    public OperationResult activateServer() {
+        if(getServerAvailable()){
+            return OperationResult.SERVER_ALREADY_ACTIVE;
+        }
+        else{
+            this.serverAvailable = true;
+            return OperationResult.OK;
+        }
+    }
+
+    public OperationResult deactivateServer() {
+        if(!getServerAvailable()){
+            return OperationResult.SERVER_ALREADY_INACTIVE;
+        }
+        else{
+            this.serverAvailable = false;
+            return OperationResult.OK;
+        }
+    }
+
+    public String getLedger() {
+        String ledger = "ledgerState {";
+        for(Operation operation : this.ledger){
+            ledger += "\n" + operation.toString();
+        }
+        ledger += "\n}";
     }
 }

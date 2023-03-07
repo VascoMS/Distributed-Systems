@@ -6,4 +6,9 @@ public class DeleteOp extends Operation {
         super(account);
     }
 
+    @Override
+    public String toString() {
+        return "  ledger {\n    type: OP_DELETE_ACCOUNT\n    userId: \"" + getAccount() + "\"\n  }";      
+    }
+
 }

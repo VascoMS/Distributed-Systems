@@ -6,4 +6,8 @@ public class CreateOp extends Operation {
         super(account);
     }
 
+    @Override
+    public String toString() {
+        return "  ledger {\n    type: OP_CREATE_ACCOUNT\n    userId: \"" + getAccount() + "\"\n  }";      
+    }
 }

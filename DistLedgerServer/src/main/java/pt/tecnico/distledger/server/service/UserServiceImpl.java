@@ -5,6 +5,7 @@ import pt.tecnico.distledger.server.domain.ServerState;
 import pt.ulisboa.tecnico.distledger.contract.user.*;
 
 import static io.grpc.Status.INVALID_ARGUMENT;
+import static io.grpc.Status.UNAVAILABLE;
 
 public class UserServiceImpl extends UserServiceGrpc.UserServiceImplBase {
 
@@ -12,10 +13,15 @@ public class UserServiceImpl extends UserServiceGrpc.UserServiceImplBase {
 
     @Override
     public void balance(BalanceRequest request, StreamObserver<BalanceResponse> responseObserver) {
-        int balance = server.getBalance(request.getUserId());
-        if (balance == -1) {
+        OperationResult result = server.balanceVerification(request.getUserId());
+        if(result == OperationResult.NO_ACCOUNT_FOUND){
             responseObserver.onError(INVALID_ARGUMENT.withDescription("Account does not exist").asRuntimeException());
-        } else {
+        }
+        else if(result == OperationResult.SERVER_OFF){
+            responseObserver.onError(UNAVAILABLE.withDescription("UNAVAILABLE").asRuntimeException());
+        }
+        else {
+            int balance = server.getBalance(request.getUserId());
             BalanceResponse response = BalanceResponse.newBuilder().setValue(balance).build();
             // Send a single response through the stream.
             responseObserver.onNext(response);
@@ -29,7 +35,11 @@ public class UserServiceImpl extends UserServiceGrpc.UserServiceImplBase {
         OperationResult result = server.createAccount(request.getUserId());
         if(result == OperationResult.ACCOUNT_ALREADY_EXISTS){
             responseObserver.onError(INVALID_ARGUMENT.withDescription("Account already exists").asRuntimeException());
-        } else{
+        }
+        else if(result == OperationResult.SERVER_OFF){
+            responseObserver.onError(UNAVAILABLE.withDescription("UNAVAILABLE").asRuntimeException());
+        }
+        else{
             CreateAccountResponse response = CreateAccountResponse.getDefaultInstance();
             // Send a single response through the stream.
             responseObserver.onNext(response);
@@ -46,6 +56,12 @@ public class UserServiceImpl extends UserServiceGrpc.UserServiceImplBase {
         }
         else if(result == OperationResult.AMOUNT_NOT_0){
             responseObserver.onError(INVALID_ARGUMENT.withDescription("Balance is not zero").asRuntimeException());
+        }
+        else if(result == OperationResult.DELETE_BROKER){
+            responseObserver.onError(INVALID_ARGUMENT.withDescription("Broker can not be deleted").asRuntimeException());
+        }
+        else if(result == OperationResult.SERVER_OFF){
+            responseObserver.onError(UNAVAILABLE.withDescription("UNAVAILABLE").asRuntimeException());
         }
         else {
             DeleteAccountResponse response = DeleteAccountResponse.getDefaultInstance();
@@ -67,7 +83,11 @@ public class UserServiceImpl extends UserServiceGrpc.UserServiceImplBase {
         }
         else if(result == OperationResult.NOT_ENOUGH_MONEY){
             responseObserver.onError(INVALID_ARGUMENT.withDescription("Insufficient balance").asRuntimeException());
-        } else{
+        }
+        else if(result == OperationResult.SERVER_OFF){
+            responseObserver.onError(UNAVAILABLE.withDescription("UNAVAILABLE").asRuntimeException());
+        }
+        else{
             TransferToResponse response = TransferToResponse.getDefaultInstance();
             // Send a single response through the stream.
             responseObserver.onNext(response);

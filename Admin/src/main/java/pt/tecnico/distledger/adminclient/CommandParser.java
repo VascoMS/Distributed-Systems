@@ -15,10 +15,13 @@ public class CommandParser {
     private static final String EXIT = "exit";
 
     private final AdminService adminService;
+    private AdminServiceGrpc.AdminServiceBlockingStub stub;
     public CommandParser(AdminService adminService) {
         this.adminService = adminService;
     }
-    void parseInput() {
+    void parseInput(String host, int port) {
+
+        this.stub = AdminService.createChannelAndStub(host, port);
 
         Scanner scanner = new Scanner(System.in);
         boolean exit = false;
@@ -51,6 +54,7 @@ public class CommandParser {
 
                 case EXIT:
                     exit = true;
+                    adminService.shutdownChannel();
                     break;
 
                 default:
@@ -69,7 +73,7 @@ public class CommandParser {
         }
         String server = split[1];
 
-        System.out.println("TODO: implement activate command");
+        adminService.activate();
     }
 
     private void deactivate(String line){
@@ -81,7 +85,7 @@ public class CommandParser {
         }
         String server = split[1];
 
-        System.out.println("TODO: implement deactivate command");
+        adminService.deactivate();
     }
 
     private void dump(String line){
@@ -93,7 +97,7 @@ public class CommandParser {
         }
         String server = split[1];
 
-        System.out.println("TODO: implement getLedgerState command");
+        adminService.dump();
     }
 
     @SuppressWarnings("unused")
@@ -101,6 +105,7 @@ public class CommandParser {
         /* TODO Phase-3 */
         System.out.println("TODO: implement gossip command (only for Phase-3)");
     }
+
     private void printUsage() {
         System.out.println("Usage:\n" +
                 "- activate <server>\n" +

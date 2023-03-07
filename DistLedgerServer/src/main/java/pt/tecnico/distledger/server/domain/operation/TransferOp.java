@@ -26,4 +26,9 @@ public class TransferOp extends Operation {
         this.amount = amount;
     }
 
+    @Override
+    public String toString() {
+        return "  ledger {\n    type: OP_TRANSFER_TO\n    userId: \"" + getAccount() + "\"\n    destUserId: \"" + getDestAccount() + "\"\n    amount: " + getAmount() + "\n  }";      
+    }
+
 }

@@ -82,12 +82,7 @@ public class CommandParser {
 
         String server = split[1];
         String username = split[2];
-        try{
-            stub.createAccount(CreateAccountRequest.newBuilder().setUserId(username).build());
-            System.out.println("OK");
-        } catch (StatusRuntimeException e) {
-            System.out.println(e.getStatus().getDescription());
-        }
+        userService.createAccount(username);
     }
 
     private void deleteAccount(String line) {
@@ -100,12 +95,7 @@ public class CommandParser {
         String server = split[1];
         String username = split[2];
 
-        try{
-            stub.deleteAccount(DeleteAccountRequest.newBuilder().setUserId(username).build());
-            System.out.println("OK");
-        } catch (StatusRuntimeException e) {
-            System.out.println(e.getStatus().getDescription());
-        }
+        userService.deleteAccount(username);
     }
 
 
@@ -119,14 +109,7 @@ public class CommandParser {
         String server = split[1];
         String username = split[2];
 
-       try{
-           int balance = stub.balance(BalanceRequest.newBuilder().setUserId(username).build()).getValue();
-           System.out.println("OK");
-           System.out.println(balance);
-
-       } catch (StatusRuntimeException e) {
-           System.out.println(e.getStatus().getDescription());
-       }
+        userService.balance(username);
     }
 
     private void transferTo(String line) {
@@ -140,12 +123,8 @@ public class CommandParser {
         String from = split[2];
         String dest = split[3];
         Integer amount = Integer.valueOf(split[4]);
-        try{
-            stub.transferTo(TransferToRequest.newBuilder().setAccountFrom(from).setAccountTo(dest).setAmount(amount).build());
-            System.out.println("OK");
-        } catch (StatusRuntimeException e) {
-            System.out.println(e.getStatus().getDescription());
-        }
+        
+        userService.transferTo(from, dest, amount);
     }
 
     private void printUsage() {

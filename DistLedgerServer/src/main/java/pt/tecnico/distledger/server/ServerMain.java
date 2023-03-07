@@ -19,10 +19,11 @@ public class ServerMain {
         }
 
         final int port = Integer.parseInt(args[0]);
-        final BindableService impl = new UserServiceImpl();
+        final BindableService userImpl = new UserServiceImpl();
+        final BindableService adminImpl = new UserServiceImpl();
 
         // Create a new server to listen on port
-        Server server = ServerBuilder.forPort(port).addService(impl).build();
+        Server server = ServerBuilder.forPort(port).addService(userImpl).addService(adminImpl).build();
 
         // Start the server
         server.start();

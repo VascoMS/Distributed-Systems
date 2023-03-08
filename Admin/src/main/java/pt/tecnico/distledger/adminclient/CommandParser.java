@@ -15,10 +15,17 @@ public class CommandParser {
     private static final String EXIT = "exit";
 
     private final AdminService adminService;
+
+    public void debug(String debugMessage){
+        AdminClientMain.debug(debugMessage);
+    }
+
     public CommandParser(AdminService adminService) {
         this.adminService = adminService;
     }
+
     void parseInput(String host, int port) {
+
 
         adminService.createChannelAndStub(host, port);
 
@@ -71,7 +78,7 @@ public class CommandParser {
             return;
         }
         String server = split[1];
-
+        debug(String.format("server: %d", server));
         adminService.activate();
     }
 
@@ -83,7 +90,7 @@ public class CommandParser {
             return;
         }
         String server = split[1];
-
+        debug(String.format("server: %d", server));
         adminService.deactivate();
     }
 
@@ -95,7 +102,7 @@ public class CommandParser {
             return;
         }
         String server = split[1];
-
+        debug(String.format("server: %d", server));
         adminService.dump();
     }
 

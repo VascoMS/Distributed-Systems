@@ -17,6 +17,10 @@ public class CommandParser {
 
     private final UserService userService;
 
+    public void debug(String debugMessage){
+        UserClientMain.debug(debugMessage);
+    }
+
     public CommandParser(UserService userService) {
         this.userService = userService;
     }
@@ -80,6 +84,7 @@ public class CommandParser {
 
         String server = split[1];
         String username = split[2];
+        debug(String.format("server: %d, username: %d", server, username));
         userService.createAccount(username);
     }
 
@@ -92,7 +97,7 @@ public class CommandParser {
         }
         String server = split[1];
         String username = split[2];
-
+        debug(String.format("server: %d, username: %d", server, username));
         userService.deleteAccount(username);
     }
 
@@ -106,7 +111,7 @@ public class CommandParser {
         }
         String server = split[1];
         String username = split[2];
-
+        debug(String.format("server: %d, username: %d", server, username));
         userService.balance(username);
     }
 
@@ -121,7 +126,7 @@ public class CommandParser {
         String from = split[2];
         String dest = split[3];
         Integer amount = Integer.valueOf(split[4]);
-        
+        debug(String.format("server: %s, from: %s, dest: %s, amount: %d", server, from, dest, amount));
         userService.transferTo(from, dest, amount);
     }
 

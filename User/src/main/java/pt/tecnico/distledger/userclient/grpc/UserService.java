@@ -28,8 +28,9 @@ public class UserService {
 
     public void createAccount(String username) {
         try{
-            stub.createAccount(CreateAccountRequest.newBuilder().setUserId(username).build());
+           CreateAccountResponse response = stub.createAccount(CreateAccountRequest.newBuilder().setUserId(username).build());
             System.out.println("OK");
+            System.out.println(response);
         } catch (StatusRuntimeException e) {
             System.out.println(e.getStatus().getDescription());
         }
@@ -37,8 +38,9 @@ public class UserService {
 
     public void deleteAccount(String username) {
         try{
-            stub.deleteAccount(DeleteAccountRequest.newBuilder().setUserId(username).build());
+            DeleteAccountResponse response = stub.deleteAccount(DeleteAccountRequest.newBuilder().setUserId(username).build());
             System.out.println("OK");
+            System.out.println(response);
         } catch (StatusRuntimeException e) {
             System.out.println(e.getStatus().getDescription());
         }
@@ -46,9 +48,9 @@ public class UserService {
 
     public void balance(String username) {
         try{
-           int balance = stub.balance(BalanceRequest.newBuilder().setUserId(username).build()).getValue();
+           BalanceResponse response = stub.balance(BalanceRequest.newBuilder().setUserId(username).build());
            System.out.println("OK");
-           System.out.println(balance);
+           System.out.println(response);
 
         } catch (StatusRuntimeException e) {
            System.out.println(e.getStatus().getDescription());
@@ -57,8 +59,9 @@ public class UserService {
 
     public void transferTo(String from, String dest, int amount) {
         try{
-            stub.transferTo(TransferToRequest.newBuilder().setAccountFrom(from).setAccountTo(dest).setAmount(amount).build());
+            TransferToResponse response = stub.transferTo(TransferToRequest.newBuilder().setAccountFrom(from).setAccountTo(dest).setAmount(amount).build());
             System.out.println("OK");
+            System.out.println(response);
         } catch (StatusRuntimeException e) {
             System.out.println(e.getStatus().getDescription());
         }

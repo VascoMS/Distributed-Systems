@@ -32,8 +32,9 @@ public class AdminService {
 
     public void activate() {
         try{
-            stub.activate(ActivateRequest.getDefaultInstance());
+           ActivateResponse response = stub.activate(ActivateRequest.getDefaultInstance());
             System.out.println("OK");
+            System.out.println(response);
         } catch (StatusRuntimeException e) {
             System.out.println(e.getStatus().getDescription());
         }
@@ -41,20 +42,21 @@ public class AdminService {
 
     public void deactivate() {
         try{
-           stub.deactivate(DeactivateRequest.getDefaultInstance());
+           DeactivateResponse response = stub.deactivate(DeactivateRequest.getDefaultInstance());
            System.out.println("OK");
+           System.out.println(response);
         } catch (StatusRuntimeException e) {
            System.out.println(e.getStatus().getDescription());
         }
     }
 
-    /*public void dump() {
+    public void dump() {
         try{
-           LedgerState ledger = stub.getLedgerState(getLedgerStateRequest.getDefaultInstance()).getLedgerState();
+           getLedgerStateResponse response = stub.getLedgerState(getLedgerStateRequest.getDefaultInstance());
            System.out.println("OK");
-           System.out.println(ledger);
+           System.out.println(response);
         } catch (StatusRuntimeException e) {
            System.out.println(e.getStatus().getDescription());
         }
-    }*/
+    }
 }

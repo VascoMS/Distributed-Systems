@@ -96,7 +96,7 @@ public class CommandParser {
         }
         String server = split[1];
 
-        //adminService.dump();
+        adminService.dump();
     }
 
     @SuppressWarnings("unused")

@@ -4,6 +4,7 @@ import pt.tecnico.distledger.server.domain.operation.CreateOp;
 import pt.tecnico.distledger.server.domain.operation.DeleteOp;
 import pt.tecnico.distledger.server.domain.operation.Operation;
 import pt.tecnico.distledger.server.domain.operation.TransferOp;
+import pt.ulisboa.tecnico.distledger.contract.DistLedgerCommonDefinitions;
 import pt.ulisboa.tecnico.distledger.contract.user.OperationResult;
 import pt.ulisboa.tecnico.distledger.contract.admin.AdminOperationResult;
 
@@ -31,8 +32,7 @@ public class ServerState {
         return serverAvailable;
     }
 
-    public OperationResult createAccount(String username) {
-        System.out.println("create account called server status: " + this.serverAvailable);
+    public synchronized OperationResult createAccount(String username) {
         if(!getServerAvailable()){
             return OperationResult.SERVER_OFF;
         }
@@ -47,7 +47,7 @@ public class ServerState {
         }
     }
     
-    public OperationResult balanceVerification(String userId){
+    public synchronized OperationResult balanceVerification(String userId){
         if(!getServerAvailable()){
             return OperationResult.SERVER_OFF;
         }
@@ -61,7 +61,7 @@ public class ServerState {
         return userAccounts.get(userId);
     }
 
-    public OperationResult transferTo(String from, String to, int amount) {
+    public synchronized OperationResult transferTo(String from, String to, int amount) {
         if(!getServerAvailable()){
             return OperationResult.SERVER_OFF;
         }
@@ -81,7 +81,7 @@ public class ServerState {
         return OperationResult.OK;
     }
 
-    public OperationResult deleteAccount(String username) {
+    public synchronized OperationResult deleteAccount(String username) {
         if(!getServerAvailable()){
             return OperationResult.SERVER_OFF;
         }
@@ -102,7 +102,7 @@ public class ServerState {
         }
     }
 
-    public AdminOperationResult activateServer() {
+    public synchronized AdminOperationResult activateServer() {
         if(getServerAvailable()){
             return AdminOperationResult.SERVER_ALREADY_ACTIVE;
         }
@@ -112,7 +112,7 @@ public class ServerState {
         }
     }
 
-    public AdminOperationResult deactivateServer() {
+    public synchronized AdminOperationResult deactivateServer() {
         if(!getServerAvailable()){
             return AdminOperationResult.SERVER_ALREADY_INACTIVE;
         }
@@ -123,12 +123,7 @@ public class ServerState {
         }
     }
 
-    public String getLedger() {
-        StringBuilder ledger = new StringBuilder("ledgerState {");
-        for(Operation operation : this.ledger){
-            ledger.append("\n").append(operation.toString());
-        }
-        ledger.append("\n}");
-        return ledger.toString();
+    public synchronized List<Operation> getLedger() {
+        return ledger;
     }
 }

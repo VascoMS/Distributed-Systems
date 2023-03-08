@@ -2,7 +2,12 @@ package pt.tecnico.distledger.server.service;
 
 import io.grpc.stub.StreamObserver;
 import pt.tecnico.distledger.server.domain.ServerState;
+import pt.tecnico.distledger.server.domain.operation.Operation;
+import pt.ulisboa.tecnico.distledger.contract.DistLedgerCommonDefinitions;
 import pt.ulisboa.tecnico.distledger.contract.admin.*;
+
+import java.util.List;
+import java.util.stream.Collectors;
 
 import static io.grpc.Status.INVALID_ARGUMENT;
 
@@ -46,11 +51,15 @@ public class AdminServiceImpl extends AdminServiceGrpc.AdminServiceImplBase {
 
     @Override
     public void getLedgerState(getLedgerStateRequest request, StreamObserver<getLedgerStateResponse> responseObserver) {
-        /*getLedgerStateResponse response = getLedgerStateResponse.newBuilder().setLedgerState(ledger).build();
+        DistLedgerCommonDefinitions.LedgerState ledgerState = DistLedgerCommonDefinitions.LedgerState.newBuilder()
+                .addAllLedger(server.getLedger().stream().map(Operation::getOperationMessageFormat)
+                        .collect(Collectors.toList())).build();
+
+        getLedgerStateResponse response = getLedgerStateResponse.newBuilder().setLedgerState(ledgerState).build();
         // Send a single response through the stream.
         responseObserver.onNext(response);
         // Notify the client that the operation has been completed.
-        responseObserver.onCompleted();*/
+        responseObserver.onCompleted();
     }
 }
 

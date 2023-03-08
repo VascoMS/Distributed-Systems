@@ -1,5 +1,7 @@
 package pt.tecnico.distledger.server.domain.operation;
 
+import pt.ulisboa.tecnico.distledger.contract.DistLedgerCommonDefinitions;
+
 public class TransferOp extends Operation {
     private String destAccount;
     private int amount;
@@ -24,6 +26,13 @@ public class TransferOp extends Operation {
 
     public void setAmount(int amount) {
         this.amount = amount;
+    }
+
+    @Override
+    public DistLedgerCommonDefinitions.Operation getOperationMessageFormat(){
+        return DistLedgerCommonDefinitions.Operation.newBuilder()
+                .setType(DistLedgerCommonDefinitions.OperationType.OP_TRANSFER_TO).setUserId(getAccount())
+                .setAmount(amount).setDestUserId(destAccount).build();
     }
 
     @Override

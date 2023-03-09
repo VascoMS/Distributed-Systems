@@ -16,12 +16,12 @@ public class UserServiceImpl extends UserServiceGrpc.UserServiceImplBase {
     }
 
     @Override
-    public void balance(BalanceRequest request, StreamObserver<BalanceResponse> responseObserver) {
-        OperationResult result = server.balanceVerification(request.getUserId());
-        if(result == OperationResult.NO_ACCOUNT_FOUND){
+    public synchronized void balance(BalanceRequest request, StreamObserver<BalanceResponse> responseObserver) {
+        ServerState.OperationResult result = server.balanceVerification(request.getUserId());
+        if(result == ServerState.OperationResult.NO_ACCOUNT_FOUND){
             responseObserver.onError(INVALID_ARGUMENT.withDescription("Account does not exist").asRuntimeException());
         }
-        else if(result == OperationResult.SERVER_OFF){
+        else if(result == ServerState.OperationResult.SERVER_OFF){
             responseObserver.onError(UNAVAILABLE.withDescription("UNAVAILABLE").asRuntimeException());
         }
         else {
@@ -35,12 +35,12 @@ public class UserServiceImpl extends UserServiceGrpc.UserServiceImplBase {
     }
 
     @Override
-    public void createAccount(CreateAccountRequest request, StreamObserver<CreateAccountResponse> responseObserver) {
-        OperationResult result = server.createAccount(request.getUserId());
-        if(result == OperationResult.ACCOUNT_ALREADY_EXISTS){
+    public synchronized void createAccount(CreateAccountRequest request, StreamObserver<CreateAccountResponse> responseObserver) {
+        ServerState.OperationResult result = server.createAccount(request.getUserId());
+        if(result == ServerState.OperationResult.ACCOUNT_ALREADY_EXISTS){
             responseObserver.onError(INVALID_ARGUMENT.withDescription("Account already exists").asRuntimeException());
         }
-        else if(result == OperationResult.SERVER_OFF){
+        else if(result == ServerState.OperationResult.SERVER_OFF){
             responseObserver.onError(UNAVAILABLE.withDescription("UNAVAILABLE").asRuntimeException());
         }
         else{
@@ -53,18 +53,18 @@ public class UserServiceImpl extends UserServiceGrpc.UserServiceImplBase {
     }
 
     @Override
-    public void deleteAccount(DeleteAccountRequest request, StreamObserver<DeleteAccountResponse> responseObserver) {
-        OperationResult result = server.deleteAccount(request.getUserId());
-        if(result == OperationResult.NO_ACCOUNT_FOUND){
+    public synchronized void deleteAccount(DeleteAccountRequest request, StreamObserver<DeleteAccountResponse> responseObserver) {
+        ServerState.OperationResult result = server.deleteAccount(request.getUserId());
+        if(result == ServerState.OperationResult.NO_ACCOUNT_FOUND){
             responseObserver.onError(INVALID_ARGUMENT.withDescription("Account does not exist").asRuntimeException());
         }
-        else if(result == OperationResult.AMOUNT_NOT_0){
+        else if(result == ServerState.OperationResult.AMOUNT_NOT_0){
             responseObserver.onError(INVALID_ARGUMENT.withDescription("Balance is not zero").asRuntimeException());
         }
-        else if(result == OperationResult.DELETE_BROKER){
+        else if(result == ServerState.OperationResult.DELETE_BROKER){
             responseObserver.onError(INVALID_ARGUMENT.withDescription("Broker can not be deleted").asRuntimeException());
         }
-        else if(result == OperationResult.SERVER_OFF){
+        else if(result == ServerState.OperationResult.SERVER_OFF){
             responseObserver.onError(UNAVAILABLE.withDescription("UNAVAILABLE").asRuntimeException());
         }
         else {
@@ -77,18 +77,21 @@ public class UserServiceImpl extends UserServiceGrpc.UserServiceImplBase {
     }
 
     @Override
-    public void transferTo(TransferToRequest request, StreamObserver<TransferToResponse> responseObserver) {
-        OperationResult result = server.transferTo(request.getAccountFrom(), request.getAccountTo(), request.getAmount());
-        if(result == OperationResult.SENDER_NOT_FOUND){
+    public synchronized void transferTo(TransferToRequest request, StreamObserver<TransferToResponse> responseObserver) {
+        ServerState.OperationResult result = server.transferTo(request.getAccountFrom(), request.getAccountTo(), request.getAmount());
+        if(result == ServerState.OperationResult.SENDER_NOT_FOUND){
             responseObserver.onError(INVALID_ARGUMENT.withDescription("Sender does not exist").asRuntimeException());
         }
-        else if(result == OperationResult.RECEIVER_NOT_FOUND){
+        else if(result == ServerState.OperationResult.INVALID_AMOUNT){
+            responseObserver.onError(INVALID_ARGUMENT.withDescription("Invalid amount").asRuntimeException());
+        }
+        else if(result == ServerState.OperationResult.RECEIVER_NOT_FOUND){
             responseObserver.onError(INVALID_ARGUMENT.withDescription("Receiver does not exist").asRuntimeException());
         }
-        else if(result == OperationResult.NOT_ENOUGH_MONEY){
+        else if(result == ServerState.OperationResult.NOT_ENOUGH_MONEY){
             responseObserver.onError(INVALID_ARGUMENT.withDescription("Insufficient balance").asRuntimeException());
         }
-        else if(result == OperationResult.SERVER_OFF){
+        else if(result == ServerState.OperationResult.SERVER_OFF){
             responseObserver.onError(UNAVAILABLE.withDescription("UNAVAILABLE").asRuntimeException());
         }
         else{

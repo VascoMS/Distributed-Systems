@@ -20,9 +20,9 @@ public class AdminServiceImpl extends AdminServiceGrpc.AdminServiceImplBase {
     }
 
     @Override
-    public void activate(ActivateRequest request, StreamObserver<ActivateResponse> responseObserver) {
-        AdminOperationResult result = server.activateServer();
-        if(result == AdminOperationResult.SERVER_ALREADY_ACTIVE){
+    public synchronized void activate(ActivateRequest request, StreamObserver<ActivateResponse> responseObserver) {
+        ServerState.AdminOperationResult result = server.activateServer();
+        if(result == ServerState.AdminOperationResult.SERVER_ALREADY_ACTIVE){
             responseObserver.onError(INVALID_ARGUMENT.withDescription("Server already active").asRuntimeException());
         }
         else{
@@ -35,9 +35,9 @@ public class AdminServiceImpl extends AdminServiceGrpc.AdminServiceImplBase {
     }
 
     @Override
-    public void deactivate(DeactivateRequest request, StreamObserver<DeactivateResponse> responseObserver) {
-        AdminOperationResult result = server.deactivateServer();
-        if(result == AdminOperationResult.SERVER_ALREADY_INACTIVE){
+    public synchronized void deactivate(DeactivateRequest request, StreamObserver<DeactivateResponse> responseObserver) {
+        ServerState.AdminOperationResult result = server.deactivateServer();
+        if(result == ServerState.AdminOperationResult.SERVER_ALREADY_INACTIVE){
             responseObserver.onError(INVALID_ARGUMENT.withDescription("Server already inactive").asRuntimeException());
         }
         else{
@@ -50,7 +50,7 @@ public class AdminServiceImpl extends AdminServiceGrpc.AdminServiceImplBase {
     }
 
     @Override
-    public void getLedgerState(getLedgerStateRequest request, StreamObserver<getLedgerStateResponse> responseObserver) {
+    public synchronized void getLedgerState(getLedgerStateRequest request, StreamObserver<getLedgerStateResponse> responseObserver) {
         DistLedgerCommonDefinitions.LedgerState ledgerState = DistLedgerCommonDefinitions.LedgerState.newBuilder()
                 .addAllLedger(server.getLedger().stream().map(Operation::getOperationMessageFormat)
                         .collect(Collectors.toList())).build();

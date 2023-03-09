@@ -32,18 +32,6 @@ message TransferToRequest {
 
 message TransferToResponse {}
 
-enum OperationResult {
-  OK = 0;
-  ACCOUNT_ALREADY_EXISTS = 1;
-  NO_ACCOUNT_FOUND = 2;
-  RECEIVER_NOT_FOUND = 3;
-  SENDER_NOT_FOUND = 4;
-  NOT_ENOUGH_MONEY = 5;
-  AMOUNT_NOT_0 = 6;
-  SERVER_OFF = 7;
-  DELETE_BROKER = 8;
-};
-
 service UserService {
   rpc balance(BalanceRequest) returns (BalanceResponse);
   rpc createAccount(CreateAccountRequest) returns (CreateAccountResponse);

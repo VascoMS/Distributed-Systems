@@ -24,14 +24,6 @@ message getLedgerStateResponse {
   LedgerState ledgerState = 1;
 }
 
-enum AdminOperationResult{
-  OK = 0;
-  SERVER_ALREADY_ACTIVE = 1;
-  SERVER_ALREADY_INACTIVE = 2;
-  DELETE_BROKER = 3;
-  SERVER_OFF = 4;
-};
-
 service AdminService {
   rpc activate(ActivateRequest) returns (ActivateResponse);
   rpc deactivate(DeactivateRequest) returns (DeactivateResponse);

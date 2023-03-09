@@ -4,9 +4,6 @@ import pt.tecnico.distledger.server.domain.operation.CreateOp;
 import pt.tecnico.distledger.server.domain.operation.DeleteOp;
 import pt.tecnico.distledger.server.domain.operation.Operation;
 import pt.tecnico.distledger.server.domain.operation.TransferOp;
-import pt.ulisboa.tecnico.distledger.contract.DistLedgerCommonDefinitions;
-import pt.ulisboa.tecnico.distledger.contract.user.OperationResult;
-import pt.ulisboa.tecnico.distledger.contract.admin.AdminOperationResult;
 
 import java.util.ArrayList;
 import java.util.HashMap;
@@ -17,6 +14,25 @@ public class ServerState {
     private List<Operation> ledger;
     private Map<String,Integer> userAccounts;
     private boolean serverAvailable;
+
+    public enum OperationResult {
+        OK,
+        ACCOUNT_ALREADY_EXISTS,
+        NO_ACCOUNT_FOUND,
+        RECEIVER_NOT_FOUND,
+        SENDER_NOT_FOUND,
+        NOT_ENOUGH_MONEY,
+        AMOUNT_NOT_0,
+        SERVER_OFF,
+        DELETE_BROKER,
+        INVALID_AMOUNT
+    }
+
+    public enum AdminOperationResult {
+        OK,
+        SERVER_ALREADY_ACTIVE,
+        SERVER_ALREADY_INACTIVE
+    }
 
     public ServerState() {
         this.ledger = new ArrayList<>();
@@ -32,7 +48,7 @@ public class ServerState {
         return serverAvailable;
     }
 
-    public synchronized OperationResult createAccount(String username) {
+    public OperationResult createAccount(String username) {
         if(!getServerAvailable()){
             return OperationResult.SERVER_OFF;
         }
@@ -47,7 +63,7 @@ public class ServerState {
         }
     }
     
-    public synchronized OperationResult balanceVerification(String userId){
+    public OperationResult balanceVerification(String userId){
         if(!getServerAvailable()){
             return OperationResult.SERVER_OFF;
         }
@@ -57,13 +73,16 @@ public class ServerState {
         else return OperationResult.OK;
     }
 
-    public synchronized int getBalance(String userId){
+    public int getBalance(String userId){
         return userAccounts.get(userId);
     }
 
-    public synchronized OperationResult transferTo(String from, String to, int amount) {
+    public OperationResult transferTo(String from, String to, int amount) {
         if(!getServerAvailable()){
             return OperationResult.SERVER_OFF;
+        }
+        else if(amount <= 0){
+            return OperationResult.INVALID_AMOUNT;
         }
         else if(!userAccounts.containsKey(from)){
             return OperationResult.SENDER_NOT_FOUND;
@@ -81,7 +100,7 @@ public class ServerState {
         return OperationResult.OK;
     }
 
-    public synchronized OperationResult deleteAccount(String username) {
+    public OperationResult deleteAccount(String username) {
         if(!getServerAvailable()){
             return OperationResult.SERVER_OFF;
         }
@@ -102,7 +121,7 @@ public class ServerState {
         }
     }
 
-    public synchronized AdminOperationResult activateServer() {
+    public AdminOperationResult activateServer() {
         if(getServerAvailable()){
             return AdminOperationResult.SERVER_ALREADY_ACTIVE;
         }
@@ -112,7 +131,7 @@ public class ServerState {
         }
     }
 
-    public synchronized AdminOperationResult deactivateServer() {
+    public AdminOperationResult deactivateServer() {
         if(!getServerAvailable()){
             return AdminOperationResult.SERVER_ALREADY_INACTIVE;
         }
@@ -123,7 +142,7 @@ public class ServerState {
         }
     }
 
-    public synchronized List<Operation> getLedger() {
+    public List<Operation> getLedger() {
         return ledger;
     }
 }

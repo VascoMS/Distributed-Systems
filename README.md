@@ -49,7 +49,15 @@ To compile and install all modules:
 ```s
 mvn clean install
 ```
+To use debug mode:
 
+add -Ddebug.
+An example of a user in debug mode:
+```s
+cd User
+mvn compile exec:java -Ddebug -Dexec.args="localhost A"
+(server name is A)
+```
 ## Built With
 
 * [Maven](https://maven.apache.org/) - Build and dependency management tool;

@@ -19,6 +19,14 @@ public class ServiceEntry {
         return this.serverEntryList;
     }
 
+    public boolean checkServerEntryExists(String target, String qualifier){
+        for(ServerEntry entry: serverEntryList){
+            if(entry.getTarget().compareTo(target)==0 && entry.getQualifier().compareTo(qualifier)==0)
+                return true;
+        }
+        return false;
+    }
+
     public void setServerEntryList(List<ServerEntry> serverEntryList) {
         this.serverEntryList = serverEntryList;
     }

@@ -2,7 +2,7 @@ syntax = "proto3";
 package pt.ulisboa.tecnico.distledger.contract;
 
 message RegisterRequest {
-  string serverName = 1;
+  string serviceName = 1;
   string qualifier = 2;
   string serverAddress = 3;
 }
@@ -12,7 +12,7 @@ message RegisterResponse {
 }
 
 message LookupRequest {
-  string service = 1;
+  string serviceName = 1;
   string qualifier = 2;
 }
 

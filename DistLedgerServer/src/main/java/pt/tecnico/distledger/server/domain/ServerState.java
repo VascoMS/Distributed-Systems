@@ -136,7 +136,6 @@ public class ServerState {
             return AdminOperationResult.SERVER_ALREADY_INACTIVE;
         }
         else{
-            System.out.println("server deactivated");
             serverAvailable = false;
             return AdminOperationResult.OK;
         }

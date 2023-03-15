@@ -12,12 +12,6 @@ public class NamingServer {
     }
     private Map<String, ServiceEntry> services;
 
-    public enum NamingServerResult {
-        OK,
-        SERVICE_NOT_FOUND,
-        SERVER_NOT_REGISTERED,
-    }
-
     public NamingServer() {
         this.services = new HashMap<>();
     }

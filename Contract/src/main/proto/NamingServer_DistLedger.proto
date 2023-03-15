@@ -16,8 +16,13 @@ message LookupRequest {
   string qualifier = 2;
 }
 
+message Server {
+  string serverTarget = 1;
+  string qualifier = 2;
+}
+
 message LookupResponse {
-  repeated string server = 1;
+  repeated Server server = 1;
 }
 
 message DeleteRequest{
@@ -30,6 +35,6 @@ message DeleteResponse{}
 
 service NamingServerService {
   rpc register(RegisterRequest) returns (RegisterResponse);
-  rpc lookup(LookupRequest) returns (LookupRequest);
+  rpc lookup(LookupRequest) returns (LookupResponse);
   rpc delete(DeleteRequest) returns (DeleteResponse);
 }

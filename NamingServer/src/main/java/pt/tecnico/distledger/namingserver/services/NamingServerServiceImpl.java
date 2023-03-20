@@ -1,8 +1,7 @@
 package pt.tecnico.distledger.namingserver.services;
 
 import io.grpc.stub.StreamObserver;
-import pt.tecnico.distledger.namingserver.domain.NamingServer;
-import pt.tecnico.distledger.namingserver.domain.ServerEntry;
+import pt.tecnico.distledger.namingserver.domain.NamingServerState;
 import pt.ulisboa.tecnico.distledger.contract.NamingServerDistLedger.*;
 import pt.ulisboa.tecnico.distledger.contract.NamingServerServiceGrpc;
 import pt.ulisboa.tecnico.distledger.contract.user.TransferToResponse;
@@ -13,13 +12,13 @@ import static io.grpc.Status.INVALID_ARGUMENT;
 
 public class NamingServerServiceImpl extends NamingServerServiceGrpc.NamingServerServiceImplBase{
 
-    private final NamingServer server;
+    private final NamingServerState server;
 
-    public NamingServerServiceImpl(NamingServer server){
+    public NamingServerServiceImpl(NamingServerState server){
         this.server=server;
     }
 
-    public NamingServer getServer() {
+    public NamingServerState getServer() {
         return server;
     }
 
@@ -36,8 +35,8 @@ public class NamingServerServiceImpl extends NamingServerServiceGrpc.NamingServe
 
     @Override
     public void register(RegisterRequest request, StreamObserver<RegisterResponse> responseObserver){
-        NamingServer.NamingServerResult result = server.register(request.getServiceName(), request.getQualifier(), request.getServerAddress());
-        if(result == NamingServer.NamingServerResult.SERVER_NOT_REGISTERED){
+        NamingServerState.NamingServerResult result = server.register(request.getServiceName(), request.getQualifier(), request.getServerAddress());
+        if(result == NamingServerState.NamingServerResult.SERVER_NOT_REGISTERED){
             responseObserver.onError(INVALID_ARGUMENT.withDescription("Not possible to register the server").asRuntimeException());
         }
         RegisterResponse response = RegisterResponse.getDefaultInstance();
@@ -50,8 +49,8 @@ public class NamingServerServiceImpl extends NamingServerServiceGrpc.NamingServe
 
     @Override
     public void delete(DeleteRequest request, StreamObserver<DeleteResponse> responseObserver){
-        NamingServer.NamingServerResult result = server.delete(request.getServiceName(), request.getTarget());
-        if(result == NamingServer.NamingServerResult.SERVICE_NOT_FOUND) {
+        NamingServerState.NamingServerResult result = server.delete(request.getServiceName(), request.getTarget());
+        if(result == NamingServerState.NamingServerResult.SERVICE_NOT_FOUND) {
             responseObserver.onError(INVALID_ARGUMENT.withDescription("Not possible to remove the server").asRuntimeException());
         }
         else {

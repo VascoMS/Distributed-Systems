@@ -3,7 +3,10 @@ package pt.tecnico.distledger.userclient;
 import io.grpc.StatusRuntimeException;
 import pt.tecnico.distledger.userclient.grpc.UserService;
 
+import java.util.List;
 import java.util.Scanner;
+
+import static java.lang.Integer.parseInt;
 
 public class CommandParser {
 
@@ -25,8 +28,11 @@ public class CommandParser {
         this.userService = userService;
     }
 
-    void parseInput(String host, int port) {
+    void parseInput(String target) {
 
+        String[] result = target.split(":");
+        String host = result[0];
+        int port = parseInt(result[1]);
         userService.createChannelAndStub(host, port);
 
         Scanner scanner = new Scanner(System.in);

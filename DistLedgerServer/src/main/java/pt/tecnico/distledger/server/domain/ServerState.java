@@ -1,9 +1,13 @@
 package pt.tecnico.distledger.server.domain;
 
+import io.grpc.ManagedChannelBuilder;
+import io.grpc.ManagedChannel;
 import pt.tecnico.distledger.server.domain.operation.CreateOp;
 import pt.tecnico.distledger.server.domain.operation.DeleteOp;
 import pt.tecnico.distledger.server.domain.operation.Operation;
 import pt.tecnico.distledger.server.domain.operation.TransferOp;
+import pt.ulisboa.tecnico.distledger.contract.NamingServerDistLedger.*;
+import pt.ulisboa.tecnico.distledger.contract.NamingServerServiceGrpc;
 
 import java.util.ArrayList;
 import java.util.HashMap;
@@ -34,15 +38,20 @@ public class ServerState {
         SERVER_ALREADY_INACTIVE
     }
 
-    public ServerState() {
+    public ServerState(int port, String qualifier) {
         this.ledger = new ArrayList<>();
         this.userAccounts = new HashMap<>();
         this.userAccounts.put("broker",1000);
         this.serverAvailable = true;
-    }
 
-    /* TODO: Here should be declared all the server state attributes
-         as well as the methods to access and interact with the state. */
+        String target = "localhost:" + port;
+
+        ManagedChannel channel = ManagedChannelBuilder.forAddress("localhost", 5001).usePlaintext().build();;
+
+        NamingServerServiceGrpc.NamingServerServiceBlockingStub stub = NamingServerServiceGrpc.newBlockingStub(channel);
+
+        stub.register(RegisterRequest.newBuilder().setServiceName("DistLedger").setQualifier(qualifier).setServerAddress(target).build());
+    }
 
     public boolean getServerAvailable() {
         return serverAvailable;

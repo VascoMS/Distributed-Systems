@@ -1,8 +1,6 @@
 package pt.tecnico.distledger.server;
 
-import io.grpc.BindableService;
-import io.grpc.Server;
-import io.grpc.ServerBuilder;
+import io.grpc.*;
 import pt.tecnico.distledger.server.domain.ServerState;
 import pt.tecnico.distledger.server.service.AdminServiceImpl;
 import pt.tecnico.distledger.server.service.UserServiceImpl;
@@ -13,14 +11,12 @@ public class ServerMain {
 
     public static void main(String[] args) throws IOException, InterruptedException {
 
-        /* TODO */
-
         System.out.printf("Received %d arguments%n", args.length);
         for (int i = 0; i < args.length; i++) {
             System.out.printf("arg[%d] = %s%n", i, args[i]);
         }
-        ServerState serverState = new ServerState();
         final int port = Integer.parseInt(args[0]);
+        ServerState serverState = new ServerState(port, args[1]);
         final BindableService userImpl = new UserServiceImpl(serverState);
         final BindableService adminImpl = new AdminServiceImpl(serverState);
 

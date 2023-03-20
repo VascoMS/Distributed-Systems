@@ -5,11 +5,17 @@ import java.util.List;
 import java.util.Map;
 import java.util.stream.Collectors;
 
-public class NamingServer {
+public class NamingServerState {
 
     private final Map<String, ServiceEntry> services;
 
-    public NamingServer() {
+    public enum NamingServerResult {
+        OK,
+        SERVICE_NOT_FOUND,
+        SERVER_NOT_REGISTERED,
+    }
+
+    public NamingServerState() {
         this.services = new HashMap<>();
     }
 
@@ -51,12 +57,5 @@ public class NamingServer {
         }
         getServices().remove(serviceName);
         return NamingServerResult.OK;
-    }
-
-
-    public enum NamingServerResult {
-        OK,
-        SERVICE_NOT_FOUND,
-        SERVER_NOT_REGISTERED,
     }
 }

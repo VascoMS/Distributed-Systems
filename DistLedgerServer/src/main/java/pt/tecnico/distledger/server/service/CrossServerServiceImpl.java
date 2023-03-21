@@ -1,6 +1,9 @@
 package pt.tecnico.distledger.server.service;
 
-import pt.ulisboa.tecnico.distledger.contract.distledgerserver.*;
+import io.grpc.stub.StreamObserver;
+import pt.ulisboa.tecnico.distledger.contract.distledgerserver.CrossServerDistLedger;
+import pt.ulisboa.tecnico.distledger.contract.distledgerserver.DistLedgerCrossServerServiceGrpc;
+
 
 public class CrossServerServiceImpl extends DistLedgerCrossServerServiceGrpc.DistLedgerCrossServerServiceImplBase {
     

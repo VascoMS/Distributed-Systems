@@ -1,12 +1,7 @@
 package pt.tecnico.distledger.adminclient;
 
 import pt.tecnico.distledger.adminclient.grpc.AdminService;
-import io.grpc.ManagedChannel;
-import io.grpc.ManagedChannelBuilder;
-import pt.ulisboa.tecnico.distledger.contract.NamingServerDistLedger.*;
-import pt.ulisboa.tecnico.distledger.contract.NamingServerServiceGrpc;
 import java.util.Scanner;
-import static java.lang.Integer.parseInt;
 
 public class CommandParser {
 
@@ -85,7 +80,7 @@ public class CommandParser {
         }
         String server = split[1];
         debug(String.format("server: %s", server));
-        this.lookup(server);
+        adminService.lookup(server);
         adminService.activate();
     }
 
@@ -98,7 +93,7 @@ public class CommandParser {
         }
         String server = split[1];
         debug(String.format("server: %s", server));
-        this.lookup(server);
+        adminService.lookup(server);
         adminService.deactivate();
     }
 
@@ -111,22 +106,8 @@ public class CommandParser {
         }
         String server = split[1];
         debug(String.format("server: %s", server));
-        this.lookup(server);
+        adminService.lookup(server);
         adminService.dump();
-    }
-
-    private void lookup(String qualifier){
-        ManagedChannel channel = ManagedChannelBuilder.forAddress("localhost", 5001).usePlaintext().build();;
-
-        NamingServerServiceGrpc.NamingServerServiceBlockingStub stub = NamingServerServiceGrpc.newBlockingStub(channel);
-
-        String target = stub.lookup(LookupRequest.newBuilder().setServiceName("DistLedger").setQualifier(qualifier).build()).getServer(0).getServerTarget();
-
-        String[] result = target.split(":");
-        String host = result[0];
-        int port = parseInt(result[1]);
-        adminService.createChannelAndStub(host, port);
-        channel.shutdownNow();
     }
 
     @SuppressWarnings("unused")

@@ -1,6 +1,7 @@
 syntax = "proto3";
 package pt.ulisboa.tecnico.distledger.contract.distledgerserver;
 
+option java_multiple_files = true;
 import "DistLedgerCommonDefinitions.proto";
 
 // Cross-server interface of the DistLedger Service (only for phases 2 & 3 of the project)

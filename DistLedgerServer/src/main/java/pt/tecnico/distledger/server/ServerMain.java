@@ -4,10 +4,6 @@ import io.grpc.*;
 import pt.tecnico.distledger.server.domain.ServerState;
 import pt.tecnico.distledger.server.service.AdminServiceImpl;
 import pt.tecnico.distledger.server.service.UserServiceImpl;
-import io.grpc.ManagedChannel;
-import io.grpc.ManagedChannelBuilder;
-import pt.ulisboa.tecnico.distledger.contract.NamingServerDistLedger.*;
-import pt.ulisboa.tecnico.distledger.contract.NamingServerServiceGrpc;
 import static java.lang.Integer.parseInt;
 
 import java.io.IOException;

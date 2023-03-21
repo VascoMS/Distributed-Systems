@@ -17,7 +17,14 @@ import java.util.Map;
 public class ServerState {
     private List<Operation> ledger;
     private Map<String,Integer> userAccounts;
+    String serverQualifier;
+    String serverTarget;
+    String serviceName;
     private boolean serverAvailable;
+    ManagedChannel namingServerChannel;
+    NamingServerServiceGrpc.NamingServerServiceBlockingStub namingServerStub;
+
+
 
     public enum OperationResult {
         OK,
@@ -43,14 +50,26 @@ public class ServerState {
         this.userAccounts = new HashMap<>();
         this.userAccounts.put("broker",1000);
         this.serverAvailable = true;
+        this.serviceName = "DistLedger";
+        this.serverTarget = "localhost:" + port;
+        this.serverQualifier = qualifier;
 
-        String target = "localhost:" + port;
+        createChannelAndStubNamingServer();
 
-        ManagedChannel channel = ManagedChannelBuilder.forAddress("localhost", 5001).usePlaintext().build();;
+        namingServerStub.register(RegisterRequest.newBuilder().setServiceName(serviceName).setQualifier(serverQualifier).setServerAddress(serverTarget).build());
 
-        NamingServerServiceGrpc.NamingServerServiceBlockingStub stub = NamingServerServiceGrpc.newBlockingStub(channel);
+        shutdownNamingServerChannel();
+    }
 
-        stub.register(RegisterRequest.newBuilder().setServiceName("DistLedger").setQualifier(qualifier).setServerAddress(target).build());
+    public void createChannelAndStubNamingServer() {
+
+        this.namingServerChannel = ManagedChannelBuilder.forAddress("localhost", 5001).usePlaintext().build();;
+        this.namingServerStub  = NamingServerServiceGrpc.newBlockingStub(namingServerChannel);
+
+    }
+
+    public void shutdownNamingServerChannel(){
+        this.namingServerChannel.shutdownNow();
     }
 
     public boolean getServerAvailable() {
@@ -136,6 +155,9 @@ public class ServerState {
         }
         else{
             serverAvailable = true;
+            /*createChannelAndStubNamingServer();
+            namingServerStub.register(RegisterRequest.newBuilder().setServiceName(serviceName).setQualifier(serverQualifier).setServerAddress(serverTarget).build());
+            shutdownNamingServerChannel();*/
             return AdminOperationResult.OK;
         }
     }
@@ -146,6 +168,9 @@ public class ServerState {
         }
         else{
             serverAvailable = false;
+            /*createChannelAndStubNamingServer();
+            namingServerStub.delete(DeleteRequest.newBuilder().setServiceName(serviceName).setTarget(serverTarget).build());
+            shutdownNamingServerChannel();*/
             return AdminOperationResult.OK;
         }
     }

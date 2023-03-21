@@ -2,11 +2,6 @@ package pt.tecnico.distledger.userclient;
 
 
 import pt.tecnico.distledger.userclient.grpc.UserService;
-import io.grpc.ManagedChannel;
-import io.grpc.ManagedChannelBuilder;
-import pt.ulisboa.tecnico.distledger.contract.NamingServerDistLedger.*;
-import pt.ulisboa.tecnico.distledger.contract.NamingServerServiceGrpc;
-
 
 import java.util.Scanner;
 
@@ -98,7 +93,7 @@ public class CommandParser {
         String server = split[1];
         String username = split[2];
         debug(String.format("server: %s, username: %s", server, username));
-        this.lookup(server);
+        userService.lookup(server);
         userService.createAccount(username);
     }
 
@@ -112,7 +107,7 @@ public class CommandParser {
         String server = split[1];
         String username = split[2];
         debug(String.format("server: %s, username: %s", server, username));
-        this.lookup(server);
+        userService.lookup(server);
         userService.deleteAccount(username);
     }
 
@@ -127,7 +122,7 @@ public class CommandParser {
         String server = split[1];
         String username = split[2];
         debug(String.format("server: %s, username: %s", server, username));
-        this.lookup(server);
+        userService.lookup(server);
         userService.balance(username);
     }
 
@@ -143,22 +138,8 @@ public class CommandParser {
         String dest = split[3];
         Integer amount = Integer.valueOf(split[4]);
         debug(String.format("server: %s, from: %s, dest: %s, amount: %d", server, from, dest, amount));
-        this.lookup(server);
+        userService.lookup(server);
         userService.transferTo(from, dest, amount);
-    }
-
-    private void lookup(String qualifier){
-        ManagedChannel channel = ManagedChannelBuilder.forAddress("localhost", 5001).usePlaintext().build();;
-
-        NamingServerServiceGrpc.NamingServerServiceBlockingStub stub = NamingServerServiceGrpc.newBlockingStub(channel);
-
-        String target = stub.lookup(LookupRequest.newBuilder().setServiceName("DistLedger").setQualifier(qualifier).build()).getServer(0).getServerTarget();
-
-        String[] result = target.split(":");
-        String host = result[0];
-        int port = parseInt(result[1]);
-        userService.createChannelAndStub(host, port);
-        channel.shutdownNow();
     }
 
     private void printUsage() {

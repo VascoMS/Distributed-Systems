@@ -1,8 +1,12 @@
 package pt.tecnico.distledger.adminclient;
 
 import pt.tecnico.distledger.adminclient.grpc.AdminService;
-
+import io.grpc.ManagedChannel;
+import io.grpc.ManagedChannelBuilder;
+import pt.ulisboa.tecnico.distledger.contract.NamingServerDistLedger.*;
+import pt.ulisboa.tecnico.distledger.contract.NamingServerServiceGrpc;
 import java.util.Scanner;
+import static java.lang.Integer.parseInt;
 
 public class CommandParser {
 
@@ -24,10 +28,10 @@ public class CommandParser {
         this.adminService = adminService;
     }
 
-    void parseInput(String host, int port) {
+    void parseInput() {
 
 
-        adminService.createChannelAndStub(host, port);
+        //adminService.createChannelAndStub(host, port);
 
         Scanner scanner = new Scanner(System.in);
         boolean exit = false;
@@ -40,14 +44,17 @@ public class CommandParser {
             switch (cmd) {
                 case ACTIVATE:
                     this.activate(line);
+                    adminService.shutdownChannel();
                     break;
 
                 case DEACTIVATE:
                     this.deactivate(line);
+                    adminService.shutdownChannel();
                     break;
 
                 case GET_LEDGER_STATE:
                     this.dump(line);
+                    adminService.shutdownChannel();
                     break;
 
                 case GOSSIP:
@@ -60,7 +67,6 @@ public class CommandParser {
 
                 case EXIT:
                     exit = true;
-                    adminService.shutdownChannel();
                     break;
 
                 default:
@@ -79,6 +85,7 @@ public class CommandParser {
         }
         String server = split[1];
         debug(String.format("server: %s", server));
+        this.lookup(server);
         adminService.activate();
     }
 
@@ -91,6 +98,7 @@ public class CommandParser {
         }
         String server = split[1];
         debug(String.format("server: %s", server));
+        this.lookup(server);
         adminService.deactivate();
     }
 
@@ -103,7 +111,21 @@ public class CommandParser {
         }
         String server = split[1];
         debug(String.format("server: %s", server));
+        this.lookup(server);
         adminService.dump();
+    }
+
+    private void lookup(String qualifier){
+        ManagedChannel channel = ManagedChannelBuilder.forAddress("localhost", 5001).usePlaintext().build();;
+
+        NamingServerServiceGrpc.NamingServerServiceBlockingStub stub = NamingServerServiceGrpc.newBlockingStub(channel);
+
+        String target = stub.lookup(LookupRequest.newBuilder().setServiceName("DistLedger").setQualifier(qualifier).build()).getServer(0).getServerTarget();
+
+        String[] result = target.split(":");
+        String host = result[0];
+        int port = parseInt(result[1]);
+        adminService.createChannelAndStub(host, port);
     }
 
     @SuppressWarnings("unused")

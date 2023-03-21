@@ -32,6 +32,9 @@ public class NamingServerState {
                 .filter(serverEntry -> serverEntry.getQualifier().equals(qualifier)).collect(Collectors.toList());
 
     }
+    public List<ServerEntry> lookupAll(String service){
+        return services.get(service).getServerEntryList();
+    }
 
     public NamingServerResult register(String serviceName, String qualifier, String serverAddress) {
         ServiceEntry serviceEntry;

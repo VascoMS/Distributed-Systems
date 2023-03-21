@@ -24,9 +24,16 @@ public class NamingServerServiceImpl extends NamingServerServiceGrpc.NamingServe
 
     @Override
     public void lookup(LookupRequest request, StreamObserver<LookupResponse> responseObserver){
-        LookupResponse response = LookupResponse.newBuilder().addAllServer(server.lookup(request.getServiceName(),
+        LookupResponse response;
+        if(request.getQualifier() == null){
+            response = LookupResponse.newBuilder().addAllServer(server.lookupAll(request.getServiceName()).stream().map(serverEntry -> Server.newBuilder().setServerTarget(serverEntry.getTarget())
+                    .setQualifier(serverEntry.getQualifier()).build()).collect(Collectors.toList())).build();
+        }
+        else{
+            response = LookupResponse.newBuilder().addAllServer(server.lookup(request.getServiceName(),
                 request.getQualifier()).stream().map(serverEntry -> Server.newBuilder().setServerTarget(serverEntry.getTarget())
                         .setQualifier(serverEntry.getQualifier()).build()).collect(Collectors.toList())).build();
+        }
         // Send a single response through the stream.
         responseObserver.onNext(response);
         // Notify the client that the operation has been completed.

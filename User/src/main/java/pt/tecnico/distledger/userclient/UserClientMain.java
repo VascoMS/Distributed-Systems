@@ -25,16 +25,16 @@ public class UserClientMain {
 
         System.out.println(UserClientMain.class.getSimpleName());
 
-        ManagedChannel channel = ManagedChannelBuilder.forAddress("localhost", 5001).usePlaintext().build();;
+        // ManagedChannel channel = ManagedChannelBuilder.forAddress("localhost", 5001).usePlaintext().build();;
 
-        NamingServerServiceGrpc.NamingServerServiceBlockingStub stub = NamingServerServiceGrpc.newBlockingStub(channel);
+        // NamingServerServiceGrpc.NamingServerServiceBlockingStub stub = NamingServerServiceGrpc.newBlockingStub(channel);
 
-        String target = stub.lookup(LookupRequest.newBuilder().setServiceName("DistLedger").setQualifier("A").build()).getServer(0).getServerTarget();
+        // String target = stub.lookup(LookupRequest.newBuilder().setServiceName("DistLedger").setQualifier("A").build()).getServer(0).getServerTarget();
 
-		debug("Target: " + target);
+		//debug("Target: " + target);
 
         CommandParser parser = new CommandParser(new UserService());
-        parser.parseInput(target);
+        parser.parseInput();
 
     }
 }

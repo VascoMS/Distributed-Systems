@@ -4,6 +4,11 @@ import io.grpc.*;
 import pt.tecnico.distledger.server.domain.ServerState;
 import pt.tecnico.distledger.server.service.AdminServiceImpl;
 import pt.tecnico.distledger.server.service.UserServiceImpl;
+import io.grpc.ManagedChannel;
+import io.grpc.ManagedChannelBuilder;
+import pt.ulisboa.tecnico.distledger.contract.NamingServerDistLedger.*;
+import pt.ulisboa.tecnico.distledger.contract.NamingServerServiceGrpc;
+import static java.lang.Integer.parseInt;
 
 import java.io.IOException;
 
@@ -32,6 +37,20 @@ public class ServerMain {
         // Do not exit the main thread. Wait until server is terminated.
         server.awaitTermination();
 
+    }
+
+    private void lookup(String qualifier){
+        ManagedChannel channel = ManagedChannelBuilder.forAddress("localhost", 5001).usePlaintext().build();;
+
+        NamingServerServiceGrpc.NamingServerServiceBlockingStub stub = NamingServerServiceGrpc.newBlockingStub(channel);
+
+        String target = stub.lookup(LookupRequest.newBuilder().setServiceName("DistLedger").setQualifier(qualifier).build()).getServer(0).getServerTarget();
+
+        String[] result = target.split(":");
+        String host = result[0];
+        int port = parseInt(result[1]);
+        adminService.createChannelAndStub(host, port);
+        channel.shutdownNow();
     }
 
 }

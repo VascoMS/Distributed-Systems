@@ -126,6 +126,7 @@ public class CommandParser {
         String host = result[0];
         int port = parseInt(result[1]);
         adminService.createChannelAndStub(host, port);
+        channel.shutdownNow();
     }
 
     @SuppressWarnings("unused")

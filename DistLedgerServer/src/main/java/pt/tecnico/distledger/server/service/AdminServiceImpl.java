@@ -6,7 +6,6 @@ import pt.tecnico.distledger.server.domain.operation.Operation;
 import pt.ulisboa.tecnico.distledger.contract.DistLedgerCommonDefinitions;
 import pt.ulisboa.tecnico.distledger.contract.admin.*;
 
-import java.util.List;
 import java.util.stream.Collectors;
 
 import static io.grpc.Status.INVALID_ARGUMENT;

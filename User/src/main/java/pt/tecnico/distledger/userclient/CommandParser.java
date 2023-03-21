@@ -158,6 +158,7 @@ public class CommandParser {
         String host = result[0];
         int port = parseInt(result[1]);
         userService.createChannelAndStub(host, port);
+        channel.shutdownNow();
     }
 
     private void printUsage() {

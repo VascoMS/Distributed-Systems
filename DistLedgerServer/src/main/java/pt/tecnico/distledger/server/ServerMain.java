@@ -39,19 +39,5 @@ public class ServerMain {
 
     }
 
-    private void lookup(String qualifier){
-        ManagedChannel channel = ManagedChannelBuilder.forAddress("localhost", 5001).usePlaintext().build();;
-
-        NamingServerServiceGrpc.NamingServerServiceBlockingStub stub = NamingServerServiceGrpc.newBlockingStub(channel);
-
-        String target = stub.lookup(LookupRequest.newBuilder().setServiceName("DistLedger").setQualifier(qualifier).build()).getServer(0).getServerTarget();
-
-        String[] result = target.split(":");
-        String host = result[0];
-        int port = parseInt(result[1]);
-        adminService.createChannelAndStub(host, port);
-        channel.shutdownNow();
-    }
-
 }
 

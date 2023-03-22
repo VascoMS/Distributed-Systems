@@ -1,8 +1,6 @@
 package pt.tecnico.distledger.namingserver.domain;
 
-import java.util.HashMap;
-import java.util.List;
-import java.util.Map;
+import java.util.*;
 import java.util.stream.Collectors;
 
 public class NamingServerState {
@@ -20,7 +18,7 @@ public class NamingServerState {
     }
 
     public Map<String, ServiceEntry> getServices() {
-        return services;
+        return Collections.unmodifiableMap(this.services);
     }
 
     public void addService(String serviceName, ServiceEntry serviceEntry) {
@@ -28,12 +26,11 @@ public class NamingServerState {
     }
 
     public List<ServerEntry> lookup(String service, String qualifier) {
+        if(qualifier.isEmpty())
+            return services.get(service).getServerEntryList();
         return services.get(service).getServerEntryList().stream()
                 .filter(serverEntry -> serverEntry.getQualifier().equals(qualifier)).collect(Collectors.toList());
 
-    }
-    public List<ServerEntry> lookupAll(String service){
-        return services.get(service).getServerEntryList();
     }
 
     public NamingServerResult register(String serviceName, String qualifier, String serverAddress) {
@@ -58,7 +55,8 @@ public class NamingServerState {
         if (!getServices().containsKey(serviceName)) {
             return NamingServerResult.SERVICE_NOT_FOUND;
         }
-        getServices().remove(serviceName);
+        List<ServerEntry> svList = this.services.get(serviceName).getServerEntryList();
+        svList.removeIf(svEntry -> svEntry.getTarget().equals(target));
         return NamingServerResult.OK;
     }
 }

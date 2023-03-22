@@ -7,7 +7,7 @@ public class ServerEntry {
 
     public ServerEntry(String target, String qualifier){
         this.target = target;
-        this.qualifier=qualifier;
+        this.qualifier = qualifier;
     }
 
     public String getTarget() { return this.target;}

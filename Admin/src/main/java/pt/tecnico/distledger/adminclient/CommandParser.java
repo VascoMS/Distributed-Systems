@@ -39,17 +39,14 @@ public class CommandParser {
             switch (cmd) {
                 case ACTIVATE:
                     this.activate(line);
-                    adminService.shutdownChannel();
                     break;
 
                 case DEACTIVATE:
                     this.deactivate(line);
-                    adminService.shutdownChannel();
                     break;
 
                 case GET_LEDGER_STATE:
                     this.dump(line);
-                    adminService.shutdownChannel();
                     break;
 
                 case GOSSIP:
@@ -82,6 +79,7 @@ public class CommandParser {
         debug(String.format("server: %s", server));
         adminService.lookup(server);
         adminService.activate();
+        adminService.shutdownChannel();
     }
 
     private void deactivate(String line){
@@ -95,6 +93,7 @@ public class CommandParser {
         debug(String.format("server: %s", server));
         adminService.lookup(server);
         adminService.deactivate();
+        adminService.shutdownChannel();
     }
 
     private void dump(String line){
@@ -108,6 +107,7 @@ public class CommandParser {
         debug(String.format("server: %s", server));
         adminService.lookup(server);
         adminService.dump();
+        adminService.shutdownChannel();
     }
 
     @SuppressWarnings("unused")

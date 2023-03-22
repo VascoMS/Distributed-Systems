@@ -12,11 +12,6 @@ message PropagateStateRequest {
 
 message PropagateStateResponse {}
 
-message CheckAvailabilityRequest {}
-
-message CheckAvailabilityResponse {}
-
 service DistLedgerCrossServerService {
   rpc propagateState(PropagateStateRequest) returns (PropagateStateResponse);
-  rpc checkAvailability(CheckAvailabilityRequest) returns (CheckAvailabilityResponse);
 }

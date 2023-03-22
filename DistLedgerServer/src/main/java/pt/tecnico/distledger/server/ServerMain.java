@@ -3,6 +3,7 @@ package pt.tecnico.distledger.server;
 import io.grpc.*;
 import pt.tecnico.distledger.server.domain.ServerState;
 import pt.tecnico.distledger.server.service.AdminServiceImpl;
+import pt.tecnico.distledger.server.service.CrossServerServiceImpl;
 import pt.tecnico.distledger.server.service.UserServiceImpl;
 import static java.lang.Integer.parseInt;
 
@@ -20,9 +21,10 @@ public class ServerMain {
         ServerState serverState = new ServerState(port, args[1]);
         final BindableService userImpl = new UserServiceImpl(serverState);
         final BindableService adminImpl = new AdminServiceImpl(serverState);
+        final BindableService crossServerImpl = new CrossServerServiceImpl(serverState);
 
         // Create a new server to listen on port
-        Server server = ServerBuilder.forPort(port).addService(userImpl).addService(adminImpl).build();
+        Server server = ServerBuilder.forPort(port).addService(userImpl).addService(adminImpl).addService(crossServerImpl).build();
 
         // Start the server
         server.start();

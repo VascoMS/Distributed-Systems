@@ -29,7 +29,7 @@ public class UserService {
 
     public void createAccount(String username) {
         try{
-           CreateAccountResponse response = stub.createAccount(CreateAccountRequest.newBuilder().setUserId(username).build());
+            CreateAccountResponse response = stub.createAccount(CreateAccountRequest.newBuilder().setUserId(username).build());
             System.out.println("OK");
             System.out.println(response);
         } catch (StatusRuntimeException e) {

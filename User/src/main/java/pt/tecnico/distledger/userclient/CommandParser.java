@@ -46,22 +46,18 @@ public class CommandParser {
                 switch (cmd) {
                     case CREATE_ACCOUNT:
                         this.createAccount(line);
-                        userService.shutdownChannel();
                         break;
 
                     case DELETE_ACCOUNT:
                         this.deleteAccount(line);
-                        userService.shutdownChannel();
                         break;
 
                     case TRANSFER_TO:
                         this.transferTo(line);
-                        userService.shutdownChannel();
                         break;
 
                     case BALANCE:
                         this.balance(line);
-                        userService.shutdownChannel();
                         break;
 
                     case HELP:
@@ -95,6 +91,7 @@ public class CommandParser {
         debug(String.format("server: %s, username: %s", server, username));
         userService.lookup(server);
         userService.createAccount(username);
+        userService.shutdownChannel();
     }
 
     private void deleteAccount(String line) {
@@ -109,6 +106,7 @@ public class CommandParser {
         debug(String.format("server: %s, username: %s", server, username));
         userService.lookup(server);
         userService.deleteAccount(username);
+        userService.shutdownChannel();
     }
 
 
@@ -124,6 +122,7 @@ public class CommandParser {
         debug(String.format("server: %s, username: %s", server, username));
         userService.lookup(server);
         userService.balance(username);
+        userService.shutdownChannel();
     }
 
     private void transferTo(String line) {
@@ -140,6 +139,7 @@ public class CommandParser {
         debug(String.format("server: %s, from: %s, dest: %s, amount: %d", server, from, dest, amount));
         userService.lookup(server);
         userService.transferTo(from, dest, amount);
+        userService.shutdownChannel();
     }
 
     private void printUsage() {

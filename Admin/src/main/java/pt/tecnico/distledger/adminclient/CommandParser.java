@@ -14,6 +14,8 @@ public class CommandParser {
     private static final String EXIT = "exit";
 
     private final AdminService adminService;
+    boolean exit = false;
+
 
     public void debug(String debugMessage){
         AdminClientMain.debug(debugMessage);
@@ -29,7 +31,6 @@ public class CommandParser {
         //adminService.createChannelAndStub(host, port);
 
         Scanner scanner = new Scanner(System.in);
-        boolean exit = false;
 
         while (!exit) {
             System.out.print("> ");
@@ -77,9 +78,12 @@ public class CommandParser {
         }
         String server = split[1];
         debug(String.format("server: %s", server));
-        adminService.lookup(server);
-        adminService.activate();
-        adminService.shutdownChannel();
+        if(adminService.lookup(server))
+            exit = true;
+        else {
+            adminService.activate();
+            adminService.shutdownChannel();
+        }
     }
 
     private void deactivate(String line){
@@ -91,9 +95,12 @@ public class CommandParser {
         }
         String server = split[1];
         debug(String.format("server: %s", server));
-        adminService.lookup(server);
-        adminService.deactivate();
-        adminService.shutdownChannel();
+        if(adminService.lookup(server))
+            exit = true;
+        else {
+            adminService.deactivate();
+            adminService.shutdownChannel();
+        }
     }
 
     private void dump(String line){
@@ -105,9 +112,12 @@ public class CommandParser {
         }
         String server = split[1];
         debug(String.format("server: %s", server));
-        adminService.lookup(server);
-        adminService.dump();
-        adminService.shutdownChannel();
+        if(adminService.lookup(server))
+            exit = true;
+        else {
+            adminService.dump();
+            adminService.shutdownChannel();
+        }
     }
 
     @SuppressWarnings("unused")

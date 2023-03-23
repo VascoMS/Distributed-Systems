@@ -20,11 +20,8 @@ public class ServiceEntry {
     }
 
     public boolean checkServerEntryExists(String target, String qualifier){
-        for(ServerEntry entry: serverEntryList){
-            if(entry.getTarget().compareTo(target)==0 && entry.getQualifier().compareTo(qualifier)==0)
-                return true;
-        }
-        return false;
+        return serverEntryList.stream()
+                .anyMatch(entry -> entry.getTarget().equals(target) && entry.getQualifier().equals(qualifier));
     }
 
     public void setServerEntryList(List<ServerEntry> serverEntryList) {

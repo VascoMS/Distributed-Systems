@@ -35,8 +35,8 @@ public class NamingServerServiceImpl extends NamingServerServiceGrpc.NamingServe
     @Override
     public void register(RegisterRequest request, StreamObserver<RegisterResponse> responseObserver){
         NamingServerState.NamingServerResult result = server.register(request.getServiceName(), request.getQualifier(), request.getServerAddress());
-        if(result == NamingServerState.NamingServerResult.SERVER_NOT_REGISTERED){
-            responseObserver.onError(INVALID_ARGUMENT.withDescription("Not possible to register the server").asRuntimeException());
+        if(result == NamingServerState.NamingServerResult.SERVER_ALREADY_REGISTERED){
+            responseObserver.onError(INVALID_ARGUMENT.withDescription("Server already registered").asRuntimeException());
         }
         RegisterResponse response = RegisterResponse.getDefaultInstance();
         // Send a single response through the stream.

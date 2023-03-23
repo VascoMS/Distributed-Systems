@@ -5,7 +5,7 @@ import pt.tecnico.distledger.server.domain.ServerState;
 import pt.tecnico.distledger.server.service.AdminServiceImpl;
 import pt.tecnico.distledger.server.service.CrossServerServiceImpl;
 import pt.tecnico.distledger.server.service.UserServiceImpl;
-import static java.lang.Integer.parseInt;
+import pt.ulisboa.tecnico.distledger.contract.NamingServerDistLedger;
 
 import java.io.IOException;
 
@@ -31,6 +31,15 @@ public class ServerMain {
 
         // Server threads are running in the background.
         System.out.println("Server started");
+
+        // Server shutdowns in safe way
+        Runtime.getRuntime().addShutdownHook(new Thread(() -> {
+            serverState.createChannelAndStubNamingServer();
+            serverState.getNamingServerStub().delete(NamingServerDistLedger.DeleteRequest.newBuilder()
+                    .setTarget("localhost:" + port).setServiceName("DistLedger").build());
+            serverState.shutdownNamingServerChannel();
+            server.shutdown();
+        }));
 
         // Do not exit the main thread. Wait until server is terminated.
         server.awaitTermination();

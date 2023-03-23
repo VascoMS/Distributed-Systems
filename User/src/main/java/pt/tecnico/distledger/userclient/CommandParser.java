@@ -5,7 +5,7 @@ import pt.tecnico.distledger.userclient.grpc.UserService;
 
 import java.util.Scanner;
 
-import static java.lang.Integer.parseInt;
+
 
 public class CommandParser {
 
@@ -18,6 +18,7 @@ public class CommandParser {
     private static final String EXIT = "exit";
 
     private final UserService userService;
+    boolean exit = false;
 
     public void debug(String debugMessage){
         UserClientMain.debug(debugMessage);
@@ -35,7 +36,6 @@ public class CommandParser {
         //  userService.createChannelAndStub(host, port);
 
         Scanner scanner = new Scanner(System.in);
-        boolean exit = false;
 
         while (!exit) {
             System.out.print("> ");
@@ -89,9 +89,12 @@ public class CommandParser {
         String server = split[1];
         String username = split[2];
         debug(String.format("server: %s, username: %s", server, username));
-        userService.lookup(server);
-        userService.createAccount(username);
-        userService.shutdownChannel();
+        if(userService.lookup(server))
+            exit = true;
+        else {
+            userService.createAccount(username);
+            userService.shutdownChannel();
+        }
     }
 
     private void deleteAccount(String line) {
@@ -104,9 +107,12 @@ public class CommandParser {
         String server = split[1];
         String username = split[2];
         debug(String.format("server: %s, username: %s", server, username));
-        userService.lookup(server);
-        userService.deleteAccount(username);
-        userService.shutdownChannel();
+        if(userService.lookup(server))
+            exit = true;
+        else {
+            userService.deleteAccount(username);
+            userService.shutdownChannel();
+        }
     }
 
 
@@ -120,9 +126,12 @@ public class CommandParser {
         String server = split[1];
         String username = split[2];
         debug(String.format("server: %s, username: %s", server, username));
-        userService.lookup(server);
-        userService.balance(username);
-        userService.shutdownChannel();
+        if(userService.lookup(server))
+            exit = true;
+        else {
+            userService.balance(username);
+            userService.shutdownChannel();
+        }
     }
 
     private void transferTo(String line) {
@@ -137,9 +146,12 @@ public class CommandParser {
         String dest = split[3];
         Integer amount = Integer.valueOf(split[4]);
         debug(String.format("server: %s, from: %s, dest: %s, amount: %d", server, from, dest, amount));
-        userService.lookup(server);
-        userService.transferTo(from, dest, amount);
-        userService.shutdownChannel();
+        if(userService.lookup(server))
+            exit = true;
+        else {
+            userService.transferTo(from, dest, amount);
+            userService.shutdownChannel();
+        }
     }
 
     private void printUsage() {

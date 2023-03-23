@@ -10,7 +10,7 @@ public class NamingServerState {
     public enum NamingServerResult {
         OK,
         SERVICE_NOT_FOUND,
-        SERVER_NOT_REGISTERED,
+        SERVER_ALREADY_REGISTERED,
     }
 
     public NamingServerState() {
@@ -26,6 +26,8 @@ public class NamingServerState {
     }
 
     public List<ServerEntry> lookup(String service, String qualifier) {
+        if(services.get(service) == null)
+            addService(service, new ServiceEntry(service));
         if(qualifier.isEmpty())
             return services.get(service).getServerEntryList();
         return services.get(service).getServerEntryList().stream()
@@ -43,7 +45,7 @@ public class NamingServerState {
             addService(serviceName, serviceEntry);
         }
         if (serviceEntry.checkServerEntryExists(serverAddress, qualifier))
-            return NamingServerResult.SERVER_NOT_REGISTERED;
+            return NamingServerResult.SERVER_ALREADY_REGISTERED;
         else {
             serviceEntry.addServerEntry(new ServerEntry(serverAddress, qualifier));
             return NamingServerResult.OK;

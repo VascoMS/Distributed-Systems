@@ -7,23 +7,18 @@ import pt.ulisboa.tecnico.distledger.contract.NamingServerDistLedger.*;
 import pt.ulisboa.tecnico.distledger.contract.NamingServerServiceGrpc;
 import pt.ulisboa.tecnico.distledger.contract.admin.*;
 
-import static java.lang.Integer.parseInt;
-
+import java.util.HashMap;
+import java.util.Map;
 
 public class AdminService {
 
-
     private ManagedChannel channel;
     private AdminServiceGrpc.AdminServiceBlockingStub stub;
+    private final Map<String, String> targets = new HashMap<>();
 
-    public void createChannelAndStub(String host, int port) {
-
-        final String target = host + ":" + port;
-
+    public void createChannelAndStub(String target) {
         this.channel = ManagedChannelBuilder.forTarget(target).usePlaintext().build();
-
         this.stub = AdminServiceGrpc.newBlockingStub(channel);
-
     }
 
     public void shutdownChannel(){
@@ -60,17 +55,18 @@ public class AdminService {
         }
     }
 
-    public void lookup(String qualifier){
-        ManagedChannel channel = ManagedChannelBuilder.forAddress("localhost", 5001).usePlaintext().build();
-
-        NamingServerServiceGrpc.NamingServerServiceBlockingStub stub = NamingServerServiceGrpc.newBlockingStub(channel);
-
-        String target = stub.lookup(LookupRequest.newBuilder().setServiceName("DistLedger").setQualifier(qualifier).build()).getServer(0).getServerTarget();
-
-        String[] result = target.split(":");
-        String host = result[0];
-        int port = parseInt(result[1]);
-        createChannelAndStub(host, port);
-        channel.shutdownNow();
+    public boolean lookup(String qualifier){
+        if(!this.targets.containsKey(qualifier)) {
+            ManagedChannel channel = ManagedChannelBuilder.forAddress("localhost", 5001).usePlaintext().build();
+            NamingServerServiceGrpc.NamingServerServiceBlockingStub stub = NamingServerServiceGrpc.newBlockingStub(channel);
+            LookupResponse response = stub.lookup(LookupRequest.newBuilder().setServiceName("DistLedger")
+                    .setQualifier(qualifier).build());
+            channel.shutdownNow();
+            if(response.getServerCount() == 0)
+                return true;
+            this.targets.put(qualifier,response.getServer(0).getServerTarget());
+        }
+        createChannelAndStub(targets.get(qualifier));
+        return false;
     }
 }

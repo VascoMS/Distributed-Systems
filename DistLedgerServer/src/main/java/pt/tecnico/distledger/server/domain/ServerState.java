@@ -21,10 +21,7 @@ import java.util.List;
 import java.util.Map;
 import java.util.stream.Collectors;
 
-import static java.lang.Integer.parseInt;
-
 public class ServerState {
-    private static final String primary = "A";
     private static final String secondary = "B";
     private final List<Operation> ledger;
     private final Map<String, Integer> userAccounts;
@@ -32,7 +29,8 @@ public class ServerState {
     private ManagedChannel namingServerChannel;
     private NamingServerServiceGrpc.NamingServerServiceBlockingStub namingServerStub;
     private DistLedgerCrossServerServiceGrpc.DistLedgerCrossServerServiceBlockingStub secondaryServerStub;
-    private String[] secondaryServerTarget;
+    private String secondaryServerTarget;
+    private ManagedChannel secondaryServerChannel;
     private boolean serverAvailable;
 
 
@@ -53,33 +51,33 @@ public class ServerState {
         } catch (StatusRuntimeException e) {
             System.err.println(e.getStatus().getDescription());
         }
-        //shutdownNamingServerChannel();
+        shutdownNamingServerChannel();
     }
 
     public void createChannelAndStubNamingServer() {
-
         this.namingServerChannel = ManagedChannelBuilder.forAddress("localhost", 5001).usePlaintext().build();
         this.namingServerStub = NamingServerServiceGrpc.newBlockingStub(namingServerChannel);
-
     }
 
     public boolean lookupSecondary(){
+        createChannelAndStubNamingServer();
         LookupResponse result = namingServerStub.lookup(LookupRequest.newBuilder().setServiceName("DistLedger").setQualifier(secondary).build());
+        shutdownNamingServerChannel();
         if(result.getServerCount() == 0)
             return false;
-        this.secondaryServerTarget = result.getServer(0).getServerTarget().split(":");
+        this.secondaryServerTarget = result.getServer(0).getServerTarget();
         return true;
     }
 
     public boolean createChannelAndStubSecondaryServer() {
         if (this.secondaryServerTarget == null) {
-            if(lookupSecondary()){
-                ManagedChannel secondaryServerChannel = ManagedChannelBuilder.forAddress(secondaryServerTarget[0], parseInt(secondaryServerTarget[1])).usePlaintext().build();
-                this.secondaryServerStub = DistLedgerCrossServerServiceGrpc.newBlockingStub(secondaryServerChannel);
-                return true;
+            if(!lookupSecondary()){
+                return false;
             }
         }
-        return false;
+        this.secondaryServerChannel = ManagedChannelBuilder.forTarget(secondaryServerTarget).usePlaintext().build();
+        this.secondaryServerStub = DistLedgerCrossServerServiceGrpc.newBlockingStub(secondaryServerChannel);
+        return true;
     }
 
     public void shutdownNamingServerChannel() {
@@ -88,6 +86,10 @@ public class ServerState {
 
     public boolean getServerAvailable() {
         return serverAvailable;
+    }
+
+    public NamingServerServiceGrpc.NamingServerServiceBlockingStub getNamingServerStub(){
+        return namingServerStub;
     }
 
     public OperationResult createAccount(String username) {
@@ -204,6 +206,7 @@ public class ServerState {
                                                 .collect(Collectors.toList()))
                                         .build())
                         .build());
+                this.secondaryServerChannel.shutdownNow();
                 return true;
             } catch (StatusRuntimeException e) {
                 return false;

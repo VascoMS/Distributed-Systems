@@ -7,9 +7,7 @@ message RegisterRequest {
   string serverAddress = 3;
 }
 
-message RegisterResponse {
-  //nada de nada
-}
+message RegisterResponse {}
 
 message LookupRequest {
   string serviceName = 1;

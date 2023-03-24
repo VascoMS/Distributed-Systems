@@ -76,11 +76,12 @@ public class UserService {
             LookupResponse response = stub.lookup(LookupRequest.newBuilder().setServiceName("DistLedger")
                     .setQualifier(qualifier).build());
             channel.shutdownNow();
-            if(response.getServerCount() == 0)
-                return true;
+            if(response.getServerCount() == 0){
+                return false;
+            }
             this.targets.put(qualifier,response.getServer(0).getServerTarget());
         }
         createChannelAndStub(targets.get(qualifier));
-        return false;
+        return true;
     }
 }

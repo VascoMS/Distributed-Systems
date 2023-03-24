@@ -30,11 +30,6 @@ public class CommandParser {
 
     void parseInput() {
 
-        //  String[] result = target.split(":");
-        //  String host = result[0];
-        //  int port = parseInt(result[1]);
-        //  userService.createChannelAndStub(host, port);
-
         Scanner scanner = new Scanner(System.in);
 
         while (!exit) {
@@ -89,8 +84,10 @@ public class CommandParser {
         String server = split[1];
         String username = split[2];
         debug(String.format("server: %s, username: %s", server, username));
-        if(userService.lookup(server))
+        debug(String.format("calling lookup with qualifier: %s", server));
+        if(!userService.lookup(server)){
             exit = true;
+        }
         else {
             userService.createAccount(username);
             userService.shutdownChannel();
@@ -107,7 +104,8 @@ public class CommandParser {
         String server = split[1];
         String username = split[2];
         debug(String.format("server: %s, username: %s", server, username));
-        if(userService.lookup(server))
+        debug(String.format("calling lookup with qualifier: %s", server));
+        if(!userService.lookup(server))
             exit = true;
         else {
             userService.deleteAccount(username);
@@ -126,7 +124,8 @@ public class CommandParser {
         String server = split[1];
         String username = split[2];
         debug(String.format("server: %s, username: %s", server, username));
-        if(userService.lookup(server))
+        debug(String.format("calling lookup with qualifier: %s", server));
+        if(!userService.lookup(server))
             exit = true;
         else {
             userService.balance(username);
@@ -146,7 +145,8 @@ public class CommandParser {
         String dest = split[3];
         Integer amount = Integer.valueOf(split[4]);
         debug(String.format("server: %s, from: %s, dest: %s, amount: %d", server, from, dest, amount));
-        if(userService.lookup(server))
+        debug(String.format("calling lookup with qualifier: %s", server));
+        if(!userService.lookup(server))
             exit = true;
         else {
             userService.transferTo(from, dest, amount);

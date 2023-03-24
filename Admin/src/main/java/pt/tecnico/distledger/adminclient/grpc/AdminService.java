@@ -63,10 +63,10 @@ public class AdminService {
                     .setQualifier(qualifier).build());
             channel.shutdownNow();
             if(response.getServerCount() == 0)
-                return true;
+                return false;
             this.targets.put(qualifier,response.getServer(0).getServerTarget());
         }
         createChannelAndStub(targets.get(qualifier));
-        return false;
+        return true;
     }
 }

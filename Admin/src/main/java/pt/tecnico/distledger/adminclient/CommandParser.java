@@ -27,9 +27,6 @@ public class CommandParser {
 
     void parseInput() {
 
-
-        //adminService.createChannelAndStub(host, port);
-
         Scanner scanner = new Scanner(System.in);
 
         while (!exit) {
@@ -78,7 +75,8 @@ public class CommandParser {
         }
         String server = split[1];
         debug(String.format("server: %s", server));
-        if(adminService.lookup(server))
+        debug(String.format("calling lookup with qualifier: %s", server));
+        if(!adminService.lookup(server))
             exit = true;
         else {
             adminService.activate();
@@ -95,7 +93,8 @@ public class CommandParser {
         }
         String server = split[1];
         debug(String.format("server: %s", server));
-        if(adminService.lookup(server))
+        debug(String.format("calling lookup with qualifier: %s", server));
+        if(!adminService.lookup(server))
             exit = true;
         else {
             adminService.deactivate();
@@ -112,7 +111,8 @@ public class CommandParser {
         }
         String server = split[1];
         debug(String.format("server: %s", server));
-        if(adminService.lookup(server))
+        debug(String.format("calling lookup with qualifier: %s", server));
+        if(!adminService.lookup(server))
             exit = true;
         else {
             adminService.dump();

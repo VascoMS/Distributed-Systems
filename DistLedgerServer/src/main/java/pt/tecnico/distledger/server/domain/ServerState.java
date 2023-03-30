@@ -22,12 +22,12 @@ import java.util.Map;
 import java.util.stream.Collectors;
 
 public class ServerState {
-    private final List<Integer> valueTs;
-    private final List<Integer> replicaTs;
     private static final String secondary = "B";
+    private final VectorClock valueTs;
+    private final VectorClock replicaTs;
     private final List<Operation> ledger;
     private final Map<String, Integer> userAccounts;
-    private final String serverQualifier;
+    private final char serverQualifier;
     private ManagedChannel namingServerChannel;
     private NamingServerServiceGrpc.NamingServerServiceBlockingStub namingServerStub;
     private DistLedgerCrossServerServiceGrpc.DistLedgerCrossServerServiceBlockingStub secondaryServerStub;
@@ -36,38 +36,50 @@ public class ServerState {
     private boolean serverAvailable;
 
 
-
     public ServerState(int port, String qualifier) {
-        this.replicaTs = new ArrayList<>();
-        this.valueTs = new ArrayList<>();
+        this.replicaTs = new VectorClock();
+        this.valueTs = new VectorClock();
         this.ledger = new ArrayList<>();
         this.userAccounts = new HashMap<>();
         this.userAccounts.put("broker", 1000);
         this.serverAvailable = true;
         String serviceName = "DistLedger";
         String serverTarget = "localhost:" + port;
-        this.serverQualifier = qualifier;
+        this.serverQualifier = qualifier.charAt(0);
         this.secondaryServerTarget = null;
 
         createChannelAndStubNamingServer();
         try {
-            namingServerStub.register(RegisterRequest.newBuilder().setServiceName(serviceName).setQualifier(serverQualifier).setServerAddress(serverTarget).build());
+            namingServerStub.register(RegisterRequest.newBuilder().setServiceName(serviceName).setQualifier((String.valueOf(serverQualifier))).setServerAddress(serverTarget).build());
         } catch (StatusRuntimeException e) {
             System.err.println(e.getStatus().getDescription());
         }
         shutdownNamingServerChannel();
     }
 
+    public int getId() {
+        return (int) this.serverQualifier - (int) 'A';
+    }
+
+    public void processUserOperation(Operation op, List<Integer> prev){
+        this.replicaTs.increment(getId());
+        op.setTS(this.replicaTs);
+        if(this.valueTs.greaterEqual(prev)){
+
+        }
+    }
+
+
     public void createChannelAndStubNamingServer() {
         this.namingServerChannel = ManagedChannelBuilder.forAddress("localhost", 5001).usePlaintext().build();
         this.namingServerStub = NamingServerServiceGrpc.newBlockingStub(namingServerChannel);
     }
 
-    public boolean lookupSecondary(){
+    public boolean lookupSecondary() {
         createChannelAndStubNamingServer();
         LookupResponse result = namingServerStub.lookup(LookupRequest.newBuilder().setServiceName("DistLedger").setQualifier(secondary).build());
         shutdownNamingServerChannel();
-        if(result.getServerCount() == 0)
+        if (result.getServerCount() == 0)
             return false;
         this.secondaryServerTarget = result.getServer(0).getServerTarget();
         return true;
@@ -75,7 +87,7 @@ public class ServerState {
 
     public boolean createChannelAndStubSecondaryServer() {
         if (this.secondaryServerTarget == null) {
-            if(!lookupSecondary()){
+            if (!lookupSecondary()) {
                 return false;
             }
         }
@@ -92,33 +104,34 @@ public class ServerState {
         return serverAvailable;
     }
 
-    public NamingServerServiceGrpc.NamingServerServiceBlockingStub getNamingServerStub(){
+    public NamingServerServiceGrpc.NamingServerServiceBlockingStub getNamingServerStub() {
         return namingServerStub;
     }
 
-    public OperationResult createAccount(String username) {
+    public OperationResult createAccount(String username, List<Integer> prev) {
         if (!getServerAvailable()) {
             return OperationResult.SERVER_OFF;
-        } else if (this.serverQualifier.equals(secondary)) {
-            return OperationResult.READ_ONLY;
         } else if (userAccounts.containsKey(username)) {
             return OperationResult.ACCOUNT_ALREADY_EXISTS;
-        } else {
-            Operation op = new CreateOp(username);
-
-            ledger.add(op);
-            if (!propagateState(ledger)) {
-                ledger.remove(op);
-                return OperationResult.READ_ONLY;
+        }  else {
+            CreateOp op = new CreateOp(username);
+            this.replicaTs.increment(getId());
+            op.setTS(this.replicaTs);
+            if(this.valueTs.greaterEqual(prev)){
+                op.setStableTrue();
+                valueTs.merge(op.getTS());
+                userAccounts.put(username, 0);
             }
-            userAccounts.put(username, 0);
+            ledger.add(op);
             return OperationResult.OK;
         }
     }
 
-    public OperationResult balanceVerification(String userId) {
+    public OperationResult balanceVerification(String userId, List<Integer> prev) {
         if (!getServerAvailable()) {
             return OperationResult.SERVER_OFF;
+        } else if (!valueTs.greaterEqual(prev)) {
+            return OperationResult.OUT_OF_DATE;
         } else if (!userAccounts.containsKey(userId)) {
             return OperationResult.NO_ACCOUNT_FOUND;
         } else return OperationResult.OK;
@@ -128,12 +141,10 @@ public class ServerState {
         return userAccounts.get(userId);
     }
 
-    public OperationResult transferTo(String from, String to, int amount) {
+    public OperationResult transferTo(String from, String to, int amount, List<Integer> prev) {
         if (!getServerAvailable()) {
             return OperationResult.SERVER_OFF;
-        } else if (this.serverQualifier.equals(secondary))
-            return OperationResult.READ_ONLY;
-        else if (amount <= 0) {
+        } else if (amount <= 0) {
             return OperationResult.INVALID_AMOUNT;
         } else if (!userAccounts.containsKey(from)) {
             return OperationResult.SENDER_NOT_FOUND;
@@ -142,23 +153,23 @@ public class ServerState {
         } else if (userAccounts.get(from) < amount) {
             return OperationResult.NOT_ENOUGH_MONEY;
         }
-        Operation op = new TransferOp(from, to, amount);
-        ledger.add(op);
-        if (!propagateState(ledger)) {
-            ledger.remove(op);
-            return OperationResult.READ_ONLY;
+        TransferOp op = new TransferOp(from, to, amount);
+        this.replicaTs.increment(getId());
+        op.setTS(this.replicaTs);
+        if(this.valueTs.greaterEqual(prev)){
+            op.setStableTrue();
+            valueTs.merge(op.getTS());
+            userAccounts.put(from, userAccounts.get(from) - amount);
+            userAccounts.put(to, userAccounts.get(to) + amount);
         }
-        userAccounts.put(from, userAccounts.get(from) - amount);
-        userAccounts.put(to, userAccounts.get(to) + amount);
+        ledger.add(op);
         return OperationResult.OK;
     }
 
     public OperationResult deleteAccount(String username) {
         if (!getServerAvailable()) {
             return OperationResult.SERVER_OFF;
-        } else if (this.serverQualifier.equals(secondary))
-            return OperationResult.READ_ONLY;
-        else if (!userAccounts.containsKey(username)) {
+        } else if (!userAccounts.containsKey(username)) {
             return OperationResult.NO_ACCOUNT_FOUND;
         } else if (userAccounts.get(username) != 0) {
             return OperationResult.AMOUNT_NOT_0;
@@ -209,7 +220,7 @@ public class ServerState {
                                         .newBuilder().addAllLedger(temporaryLedger.stream()
                                                 .map(Operation::getOperationMessageFormat)
                                                 .collect(Collectors.toList()))
-                                        .build()).setTimestamp(valueTs)
+                                        .build())
                         .build());
                 this.secondaryServerChannel.shutdownNow();
                 return true;
@@ -262,7 +273,8 @@ public class ServerState {
         SERVER_OFF,
         DELETE_BROKER,
         INVALID_AMOUNT,
-        READ_ONLY
+        READ_ONLY,
+        OUT_OF_DATE
     }
 
     public enum AdminOperationResult {

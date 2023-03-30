@@ -1,5 +1,6 @@
 package pt.tecnico.distledger.server.domain.operation;
 
+import pt.tecnico.distledger.server.domain.VectorClock;
 import pt.ulisboa.tecnico.distledger.contract.DistLedgerCommonDefinitions;
 
 import java.util.ArrayList;
@@ -7,8 +8,8 @@ import java.util.List;
 
 public class Operation {
     private String account;
-    private List<Integer> valueTS = new ArrayList<>();
-    private List<Integer> replicaTS = new ArrayList<>();
+    private VectorClock TS = new VectorClock();
+    private VectorClock prev = new VectorClock();
     private boolean stable = false;
 
     public Operation(String fromAccount) {
@@ -28,20 +29,20 @@ public class Operation {
         this.account = account;
     }
 
-    public List<Integer> getValueTS() {
-        return this.valueTS;
+    public VectorClock getTS() {
+        return this.TS;
     }
     
-    public void setValueTS(List<Integer> valueTS) {
-        this.valueTS = valueTS;
+    public void setTS(VectorClock valueTS) {
+        this.TS = valueTS;
     }
 
-    public List<Integer> getReplicaTS() {
-        return this.replicaTS;
+    public VectorClock getPrev() {
+        return this.prev;
     }
 
-    public void setReplicaTS(List<Integer> replicaTS) {
-        this.replicaTS = replicaTS;
+    public void setPrev(VectorClock replicaTS) {
+        this.prev = replicaTS;
     }
     
     public boolean getStable() {

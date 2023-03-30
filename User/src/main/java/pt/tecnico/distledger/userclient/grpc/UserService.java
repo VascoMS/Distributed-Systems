@@ -3,11 +3,14 @@ package pt.tecnico.distledger.userclient.grpc;
 import io.grpc.ManagedChannel;
 import io.grpc.ManagedChannelBuilder;
 import io.grpc.StatusRuntimeException;
+import pt.ulisboa.tecnico.distledger.contract.DistLedgerCommonDefinitions.*;
 import pt.ulisboa.tecnico.distledger.contract.user.*;
 import pt.ulisboa.tecnico.distledger.contract.NamingServerServiceGrpc;
 import pt.ulisboa.tecnico.distledger.contract.NamingServerDistLedger.*;
 
+import java.util.ArrayList;
 import java.util.HashMap;
+import java.util.List;
 import java.util.Map;
 
 
@@ -17,6 +20,7 @@ public class UserService {
     private ManagedChannel channel;
     private UserServiceGrpc.UserServiceBlockingStub stub;
     private final Map<String, String> targets = new HashMap<>();
+    private final List<Integer> prev = new ArrayList<>();
 
     public void createChannelAndStub(String target) {
         this.channel = ManagedChannelBuilder.forTarget(target).usePlaintext().build();
@@ -50,7 +54,10 @@ public class UserService {
 
     public void balance(String username) {
         try{
-           BalanceResponse response = stub.balance(BalanceRequest.newBuilder().setUserId(username).build());
+           BalanceResponse response = stub.balance(BalanceRequest.newBuilder().setUserId(username)
+                   .setPrev(Timestamp.newBuilder().addAllTimestamp(this.prev)).build());
+           this.prev.clear();
+           this.prev.addAll(response.getNew().getTimestampList());
            System.out.println("OK");
            System.out.println(response);
 
@@ -61,7 +68,8 @@ public class UserService {
 
     public void transferTo(String from, String dest, int amount) {
         try{
-            TransferToResponse response = stub.transferTo(TransferToRequest.newBuilder().setAccountFrom(from).setAccountTo(dest).setAmount(amount).build());
+            TransferToResponse response = stub.transferTo(TransferToRequest.newBuilder().setAccountFrom(from)
+                    .setAccountTo(dest).setAmount(amount).build());
             System.out.println("OK");
             System.out.println(response);
         } catch (StatusRuntimeException e) {

@@ -1,30 +1,28 @@
 syntax = "proto3";
 package pt.ulisboa.tecnico.distledger.contract.user;
 
+import "DistLedgerCommonDefinitions.proto";
+
 option java_multiple_files = true;
 // User Interface of the DistLedger Service
 
-message Timestamp{
-  repeated int32 timestamp = 1;
-}
-
 message BalanceRequest {
   string userId = 1;
-  Timestamp timestamp = 2;
+  Timestamp prev = 2;
 }
 
 message BalanceResponse {
   int32 value = 1;
-  Timestamp timestamp = 2;
+  Timestamp new = 2;
 }
 
 message CreateAccountRequest {
   string userId = 1;
-  Timestamp timestamp = 2;
+  Timestamp prev = 2;
 }
 
 message CreateAccountResponse {
-  Timestamp timestamp = 1;
+  Timestamp new = 1;
 }
 
 message DeleteAccountRequest {
@@ -37,11 +35,11 @@ message TransferToRequest {
   string accountFrom = 1;
   string accountTo = 2;
   int32 amount = 3;
-  Timestamp timestamp = 4;
+  Timestamp prev = 4;
 }
 
 message TransferToResponse {
-  Timestamp timestamp = 1;
+  Timestamp new = 1;
 }
 
 service UserService {

@@ -3,14 +3,17 @@ package pt.ulisboa.tecnico.distledger.contract.distledgerserver;
 
 option java_multiple_files = true;
 import "DistLedgerCommonDefinitions.proto";
+import "User_DistLedger.proto";
 
 // Cross-server interface of the DistLedger Service (only for phases 2 & 3 of the project)
 
 message PropagateStateRequest {
   LedgerState state = 1;
+  Timestamp timestamp = 2;
 }
 
-message PropagateStateResponse {}
+message PropagateStateResponse {
+}
 
 service DistLedgerCrossServerService {
   rpc propagateState(PropagateStateRequest) returns (PropagateStateResponse);

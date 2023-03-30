@@ -22,6 +22,8 @@ import java.util.Map;
 import java.util.stream.Collectors;
 
 public class ServerState {
+    private final List<Integer> valueTs;
+    private final List<Integer> replicaTs;
     private static final String secondary = "B";
     private final List<Operation> ledger;
     private final Map<String, Integer> userAccounts;
@@ -36,6 +38,8 @@ public class ServerState {
 
 
     public ServerState(int port, String qualifier) {
+        this.replicaTs = new ArrayList<>();
+        this.valueTs = new ArrayList<>();
         this.ledger = new ArrayList<>();
         this.userAccounts = new HashMap<>();
         this.userAccounts.put("broker", 1000);
@@ -101,6 +105,7 @@ public class ServerState {
             return OperationResult.ACCOUNT_ALREADY_EXISTS;
         } else {
             Operation op = new CreateOp(username);
+
             ledger.add(op);
             if (!propagateState(ledger)) {
                 ledger.remove(op);
@@ -204,7 +209,7 @@ public class ServerState {
                                         .newBuilder().addAllLedger(temporaryLedger.stream()
                                                 .map(Operation::getOperationMessageFormat)
                                                 .collect(Collectors.toList()))
-                                        .build())
+                                        .build()).setTimestamp(valueTs)
                         .build());
                 this.secondaryServerChannel.shutdownNow();
                 return true;

@@ -4,19 +4,28 @@ package pt.ulisboa.tecnico.distledger.contract.user;
 option java_multiple_files = true;
 // User Interface of the DistLedger Service
 
+message Timestamp{
+  repeated int32 timestamp = 1;
+}
+
 message BalanceRequest {
   string userId = 1;
+  Timestamp timestamp = 2;
 }
 
 message BalanceResponse {
   int32 value = 1;
+  Timestamp timestamp = 2;
 }
 
 message CreateAccountRequest {
   string userId = 1;
+  Timestamp timestamp = 2;
 }
 
-message CreateAccountResponse {}
+message CreateAccountResponse {
+  Timestamp timestamp = 1;
+}
 
 message DeleteAccountRequest {
   string userId = 1;
@@ -28,9 +37,12 @@ message TransferToRequest {
   string accountFrom = 1;
   string accountTo = 2;
   int32 amount = 3;
+  Timestamp timestamp = 4;
 }
 
-message TransferToResponse {}
+message TransferToResponse {
+  Timestamp timestamp = 1;
+}
 
 service UserService {
   rpc balance(BalanceRequest) returns (BalanceResponse);

@@ -209,6 +209,15 @@ public class ServerState {
         }
     }
 
+    public AdminOperationResult ledgerStateVerification(List<Integer> prev) {
+        if (!valueTs.greaterEqual(prev)) {
+            return AdminOperationResult.OUT_OF_DATE;
+        }
+        else {
+            return AdminOperationResult.OK;
+        }
+    }
+
     public List<Operation> getLedger() {
         return ledger;
     }
@@ -284,6 +293,7 @@ public class ServerState {
     public enum AdminOperationResult {
         OK,
         SERVER_ALREADY_ACTIVE,
-        SERVER_ALREADY_INACTIVE
+        SERVER_ALREADY_INACTIVE,
+        OUT_OF_DATE
     }
 }

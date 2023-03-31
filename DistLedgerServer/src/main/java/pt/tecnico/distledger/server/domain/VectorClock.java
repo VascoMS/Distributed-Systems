@@ -12,6 +12,10 @@ public class VectorClock {
         timestamps = new ArrayList<>();
     }
 
+    public List<Integer> getTimestamps() {
+        return timestamps;
+    }
+
     public Integer getTimestamp(Integer i){
         return timestamps.get(i);
     }

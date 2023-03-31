@@ -57,6 +57,10 @@ public class ServerState {
         shutdownNamingServerChannel();
     }
 
+    public VectorClock getValueTs() {
+        return valueTs;
+    }
+
     public int getId() {
         return (int) this.serverQualifier - (int) 'A';
     }

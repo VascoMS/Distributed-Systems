@@ -2,6 +2,8 @@ package pt.tecnico.distledger.server.service;
 
 import io.grpc.stub.StreamObserver;
 import pt.tecnico.distledger.server.domain.ServerState;
+import pt.tecnico.distledger.server.domain.VectorClock;
+import pt.ulisboa.tecnico.distledger.contract.DistLedgerCommonDefinitions;
 import pt.ulisboa.tecnico.distledger.contract.user.*;
 
 import static io.grpc.Status.INVALID_ARGUMENT;
@@ -26,7 +28,8 @@ public class UserServiceImpl extends UserServiceGrpc.UserServiceImplBase {
             responseObserver.onError(UNAVAILABLE.withDescription("Awaiting synchronization").asRuntimeException());
         } else {
             int balance = server.getBalance(request.getUserId());
-            BalanceResponse response = BalanceResponse.newBuilder().setValue(balance).build();
+            VectorClock valueTs = server.getValueTs();
+            BalanceResponse response = BalanceResponse.newBuilder().setValue(balance).setNew(DistLedgerCommonDefinitions.Timestamp.newBuilder().addAllTimestamp(valueTs.getTimestamps()).build()).build();
             // Send a single response through the stream.
             responseObserver.onNext(response);
             // Notify the client that the operation has been completed.

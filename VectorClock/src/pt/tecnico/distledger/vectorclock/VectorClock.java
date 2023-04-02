@@ -12,6 +12,8 @@ public class VectorClock {
         timestamps = new ArrayList<>();
     }
 
+    public VectorClock(List<Integer> vc){timestamps = new ArrayList<>(vc);}
+
     public List<Integer> getTimestamps() {
         return timestamps;
     }
@@ -31,9 +33,9 @@ public class VectorClock {
                 .allMatch(i -> timestamps.get(i) >= v.get(i));
     }
 
-    public boolean greater(List<Integer> v){
+    public boolean lessEqual(List<Integer> v){
         return IntStream.range(0, timestamps.size())
-                .allMatch(i -> timestamps.get(i) > v.get(i));
+                .allMatch(i -> v.get(i) <= timestamps.get(i));
     }
 
     public void merge(VectorClock v){

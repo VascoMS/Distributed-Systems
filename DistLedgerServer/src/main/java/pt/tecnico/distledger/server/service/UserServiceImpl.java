@@ -2,7 +2,7 @@ package pt.tecnico.distledger.server.service;
 
 import io.grpc.stub.StreamObserver;
 import pt.tecnico.distledger.server.domain.ServerState;
-import pt.tecnico.distledger.server.domain.VectorClock;
+import pt.tecnico.distledger.vectorclock.VectorClock;
 import pt.ulisboa.tecnico.distledger.contract.DistLedgerCommonDefinitions;
 import pt.ulisboa.tecnico.distledger.contract.user.*;
 
@@ -47,7 +47,8 @@ public class UserServiceImpl extends UserServiceGrpc.UserServiceImplBase {
         } else if (result == ServerState.OperationResult.OUT_OF_DATE) {
             responseObserver.onError(UNAVAILABLE.withDescription("Awaiting synchronization").asRuntimeException());
         } else {
-            CreateAccountResponse response = CreateAccountResponse.getDefaultInstance();
+            CreateAccountResponse response = CreateAccountResponse.newBuilder().setNew(DistLedgerCommonDefinitions.Timestamp.newBuilder()
+                    .addAllTimestamp(server.getReplicaTs().getTimestamps()).build()).build();
             // Send a single response through the stream.
             responseObserver.onNext(response);
             // Notify the client that the operation has been completed.
@@ -89,7 +90,8 @@ public class UserServiceImpl extends UserServiceGrpc.UserServiceImplBase {
         } else if (result == ServerState.OperationResult.SERVER_OFF) {
             responseObserver.onError(UNAVAILABLE.withDescription("UNAVAILABLE").asRuntimeException());
         } else {
-            TransferToResponse response = TransferToResponse.getDefaultInstance();
+            TransferToResponse response = TransferToResponse.newBuilder().setNew(DistLedgerCommonDefinitions.Timestamp.newBuilder()
+                    .addAllTimestamp(server.getReplicaTs().getTimestamps()).build()).build();
             // Send a single response through the stream.
             responseObserver.onNext(response);
             // Notify the client that the operation has been completed.

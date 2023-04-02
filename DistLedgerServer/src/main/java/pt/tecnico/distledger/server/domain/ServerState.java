@@ -7,6 +7,7 @@ import pt.tecnico.distledger.server.domain.operation.CreateOp;
 import pt.tecnico.distledger.server.domain.operation.DeleteOp;
 import pt.tecnico.distledger.server.domain.operation.Operation;
 import pt.tecnico.distledger.server.domain.operation.TransferOp;
+import pt.tecnico.distledger.vectorclock.VectorClock;
 import pt.ulisboa.tecnico.distledger.contract.DistLedgerCommonDefinitions;
 import pt.ulisboa.tecnico.distledger.contract.NamingServerDistLedger.LookupRequest;
 import pt.ulisboa.tecnico.distledger.contract.NamingServerDistLedger.LookupResponse;
@@ -14,6 +15,7 @@ import pt.ulisboa.tecnico.distledger.contract.NamingServerDistLedger.RegisterReq
 import pt.ulisboa.tecnico.distledger.contract.NamingServerServiceGrpc;
 import pt.ulisboa.tecnico.distledger.contract.distledgerserver.DistLedgerCrossServerServiceGrpc;
 import pt.ulisboa.tecnico.distledger.contract.distledgerserver.PropagateStateRequest;
+import pt.tecnico.distledger.vectorclock.VectorClock;
 
 import java.util.ArrayList;
 import java.util.HashMap;
@@ -22,7 +24,6 @@ import java.util.Map;
 import java.util.stream.Collectors;
 
 public class ServerState {
-    private static final String secondary = "B";
     private final VectorClock valueTs;
     private final VectorClock replicaTs;
     private final List<Operation> ledger;
@@ -30,9 +31,9 @@ public class ServerState {
     private final char serverQualifier;
     private ManagedChannel namingServerChannel;
     private NamingServerServiceGrpc.NamingServerServiceBlockingStub namingServerStub;
-    private DistLedgerCrossServerServiceGrpc.DistLedgerCrossServerServiceBlockingStub secondaryServerStub;
-    private String secondaryServerTarget;
-    private ManagedChannel secondaryServerChannel;
+    private final List<DistLedgerCrossServerServiceGrpc.DistLedgerCrossServerServiceBlockingStub> serverStubs;
+    private final List<String> serverTargets;
+    private final List<ManagedChannel> serverChannels;
     private boolean serverAvailable;
 
 
@@ -46,7 +47,9 @@ public class ServerState {
         String serviceName = "DistLedger";
         String serverTarget = "localhost:" + port;
         this.serverQualifier = qualifier.charAt(0);
-        this.secondaryServerTarget = null;
+        this.serverTargets = new ArrayList<>();
+        this.serverStubs = new ArrayList<>();
+        this.serverChannels = new ArrayList<>();
 
         createChannelAndStubNamingServer();
         try {
@@ -61,16 +64,12 @@ public class ServerState {
         return valueTs;
     }
 
-    public int getId() {
-        return (int) this.serverQualifier - (int) 'A';
+    public VectorClock getReplicaTs() {
+        return replicaTs;
     }
 
-    public void processUserOperation(Operation op, List<Integer> prev){
-        this.replicaTs.increment(getId());
-        op.setTS(this.replicaTs);
-        if(this.valueTs.greaterEqual(prev)){
-
-        }
+    public int getId() {
+        return (int) this.serverQualifier - (int) 'A';
     }
 
 
@@ -79,24 +78,25 @@ public class ServerState {
         this.namingServerStub = NamingServerServiceGrpc.newBlockingStub(namingServerChannel);
     }
 
-    public boolean lookupSecondary() {
+    public boolean lookupServer() {
         createChannelAndStubNamingServer();
-        LookupResponse result = namingServerStub.lookup(LookupRequest.newBuilder().setServiceName("DistLedger").setQualifier(secondary).build());
+        LookupResponse result = namingServerStub.lookup(LookupRequest.newBuilder().setServiceName("DistLedger").setQualifier("").build());
         shutdownNamingServerChannel();
         if (result.getServerCount() == 0)
             return false;
-        this.secondaryServerTarget = result.getServer(0).getServerTarget();
+        result.getServerList().forEach(sv -> this.serverTargets.add(sv.getServerTarget()));
         return true;
     }
 
-    public boolean createChannelAndStubSecondaryServer() {
-        if (this.secondaryServerTarget == null) {
-            if (!lookupSecondary()) {
-                return false;
-            }
+    public boolean createChannelsAndStubsReplicas() {
+        if (!lookupServer()) {
+            return false;
         }
-        this.secondaryServerChannel = ManagedChannelBuilder.forTarget(secondaryServerTarget).usePlaintext().build();
-        this.secondaryServerStub = DistLedgerCrossServerServiceGrpc.newBlockingStub(secondaryServerChannel);
+        serverTargets.forEach(svTg -> {
+            ManagedChannel channel = ManagedChannelBuilder.forTarget(svTg).usePlaintext().build();
+            serverChannels.add(channel);
+            serverStubs.add(DistLedgerCrossServerServiceGrpc.newBlockingStub(channel));
+        });
         return true;
     }
 
@@ -121,6 +121,7 @@ public class ServerState {
             CreateOp op = new CreateOp(username);
             this.replicaTs.increment(getId());
             op.setTS(this.replicaTs);
+            op.setPrev(new VectorClock(prev));
             if(this.valueTs.greaterEqual(prev)){
                 op.setStableTrue();
                 valueTs.merge(op.getTS());
@@ -160,6 +161,7 @@ public class ServerState {
         TransferOp op = new TransferOp(from, to, amount);
         this.replicaTs.increment(getId());
         op.setTS(this.replicaTs);
+        op.setPrev(new VectorClock(prev));
         if(this.valueTs.greaterEqual(prev)){
             op.setStableTrue();
             valueTs.merge(op.getTS());
@@ -182,7 +184,7 @@ public class ServerState {
         } else {
             Operation op = new DeleteOp(username);
             ledger.add(op);
-            if (!propagateState(ledger)) {
+            if (!propagateState()) {
                 ledger.remove(op);
                 return OperationResult.READ_ONLY;
             }
@@ -222,20 +224,20 @@ public class ServerState {
         return ledger;
     }
 
-    public boolean propagateState(List<Operation> temporaryLedger) {
-        if (!createChannelAndStubSecondaryServer()) {
+    public boolean propagateState() {
+        if (!createChannelsAndStubsReplicas()) {
             return false;
         } else {
             try {
-                secondaryServerStub.propagateState(PropagateStateRequest
+                serverStubs.forEach(svStub -> svStub.propagateState(PropagateStateRequest
                         .newBuilder().setState(
                                 DistLedgerCommonDefinitions.LedgerState
-                                        .newBuilder().addAllLedger(temporaryLedger.stream()
+                                        .newBuilder().addAllLedger(ledger.stream()
                                                 .map(Operation::getOperationMessageFormat)
                                                 .collect(Collectors.toList()))
-                                        .build())
-                        .build());
-                this.secondaryServerChannel.shutdownNow();
+                                        .build()).setReplicaTS(DistLedgerCommonDefinitions.Timestamp.newBuilder()
+                                .addAllTimestamp(replicaTs.getTimestamps()).build()).build()));
+                this.serverChannels.forEach(ManagedChannel::shutdownNow);
                 return true;
             } catch (StatusRuntimeException e) {
                 return false;

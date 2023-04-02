@@ -2,7 +2,7 @@ package pt.tecnico.distledger.server.service;
 
 import io.grpc.stub.StreamObserver;
 import pt.tecnico.distledger.server.domain.ServerState;
-import pt.tecnico.distledger.server.domain.VectorClock;
+import pt.tecnico.distledger.vectorclock.VectorClock;
 import pt.tecnico.distledger.server.domain.operation.Operation;
 import pt.ulisboa.tecnico.distledger.contract.DistLedgerCommonDefinitions;
 import pt.ulisboa.tecnico.distledger.contract.admin.*;
@@ -67,6 +67,12 @@ public class AdminServiceImpl extends AdminServiceGrpc.AdminServiceImplBase {
             // Notify the client that the operation has been completed.
             responseObserver.onCompleted();
         }
+    }
+
+    @Override
+
+    public synchronized void gossip(GossipRequest request, StreamObserver<GossipResponse> responseObserver){
+
     }
 }
 

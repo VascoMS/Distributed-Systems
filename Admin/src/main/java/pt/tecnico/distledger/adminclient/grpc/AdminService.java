@@ -8,17 +8,15 @@ import pt.ulisboa.tecnico.distledger.contract.NamingServerDistLedger.*;
 import pt.ulisboa.tecnico.distledger.contract.NamingServerServiceGrpc;
 import pt.ulisboa.tecnico.distledger.contract.admin.*;
 
-import java.util.ArrayList;
-import java.util.HashMap;
-import java.util.List;
-import java.util.Map;
+import java.util.*;
 
 public class AdminService {
 
     private ManagedChannel channel;
     private AdminServiceGrpc.AdminServiceBlockingStub stub;
     private final Map<String, String> targets = new HashMap<>();
-    private final List<Integer> prev = new ArrayList<>();
+    private final List<Integer> prev = new ArrayList<Integer>(Collections.nCopies(3, 0));
+
 
     public void createChannelAndStub(String target) {
         this.channel = ManagedChannelBuilder.forTarget(target).usePlaintext().build();
@@ -52,8 +50,8 @@ public class AdminService {
     public void dump() {
         try{
            getLedgerStateResponse response = stub.getLedgerState(getLedgerStateRequest.newBuilder().setPrev(DistLedgerCommonDefinitions.Timestamp.newBuilder().addAllTimestamp(this.prev)).build());
-           this.prev.clear();
-           this.prev.addAll(response.getNew().getTimestampList());
+
+           merge(response.getNew().getTimestampList());
            System.out.println("OK");
            System.out.println(response);
         } catch (StatusRuntimeException e) {
@@ -74,5 +72,20 @@ public class AdminService {
         }
         createChannelAndStub(targets.get(qualifier));
         return true;
+    }
+    public  void gossip(){
+        try{
+            GossipResponse response = stub.gossip(GossipRequest.getDefaultInstance());
+            System.out.println("OK");
+            System.out.println(response);
+        } catch (StatusRuntimeException e) {
+            System.out.println(e.getStatus().getDescription());
+        }
+    }
+    public void merge(List<Integer> v){
+        for(int i = 0; i < prev.size(); i++){
+            if(v.get(i) > prev.get(i))
+                prev.set(i, v.get(i));
+        }
     }
 }

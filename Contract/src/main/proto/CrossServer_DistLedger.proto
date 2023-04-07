@@ -9,7 +9,7 @@ import "User_DistLedger.proto";
 
 message PropagateStateRequest {
   LedgerState state = 1;
-  Timestamp valueTs = 2;
+  Timestamp replicaTs = 2;
 }
 
 message PropagateStateResponse {

@@ -2,7 +2,7 @@ package pt.tecnico.distledger.server.service;
 
 import io.grpc.stub.StreamObserver;
 import pt.tecnico.distledger.server.domain.ServerState;
-import pt.tecnico.distledger.vectorclock.VectorClock;
+import pt.tecnico.distledger.server.domain.VectorClock;
 import pt.ulisboa.tecnico.distledger.contract.DistLedgerCommonDefinitions;
 import pt.ulisboa.tecnico.distledger.contract.user.*;
 

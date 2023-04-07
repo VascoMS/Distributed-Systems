@@ -119,11 +119,23 @@ public class CommandParser {
             adminService.shutdownChannel();
         }
     }
-
     @SuppressWarnings("unused")
     private void gossip(String line){
-        /* TODO Phase-3 */
-        System.out.println("TODO: implement gossip command (only for Phase-3)");
+        String[] split = line.split(SPACE);
+
+        if (split.length != 2){
+            this.printUsage();
+            return;
+        }
+        String server = split[1];
+        debug(String.format("server: %s", server));
+        debug(String.format("calling lookup with qualifier: %s", server));
+        if(!adminService.lookup(server))
+            exit = true;
+        else {
+            adminService.gossip();
+            adminService.shutdownChannel();
+        }
     }
 
     private void printUsage() {

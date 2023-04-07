@@ -2,7 +2,7 @@ package pt.tecnico.distledger.server.service;
 
 import io.grpc.stub.StreamObserver;
 import pt.tecnico.distledger.server.domain.ServerState;
-import pt.tecnico.distledger.vectorclock.VectorClock;
+import pt.tecnico.distledger.server.domain.VectorClock;
 import pt.tecnico.distledger.server.domain.operation.Operation;
 import pt.ulisboa.tecnico.distledger.contract.DistLedgerCommonDefinitions;
 import pt.ulisboa.tecnico.distledger.contract.admin.*;
@@ -72,7 +72,15 @@ public class AdminServiceImpl extends AdminServiceGrpc.AdminServiceImplBase {
     @Override
 
     public synchronized void gossip(GossipRequest request, StreamObserver<GossipResponse> responseObserver){
-
+        ServerState.AdminOperationResult result = server.gossip();
+        if(result == ServerState.AdminOperationResult.REPLICAS_UNREACHABLE){
+            responseObserver.onError(UNAVAILABLE.withDescription("No replicas reachable").asRuntimeException());
+        }
+        GossipResponse response = GossipResponse.getDefaultInstance();
+        // Send a single response through the stream.
+        responseObserver.onNext(response);
+        // Notify the client that the operation has been completed.
+        responseObserver.onCompleted();
     }
 }
 

@@ -16,17 +16,12 @@ public class CrossServerServiceImpl extends DistLedgerCrossServerServiceGrpc.Dis
     private final ServerState server;
 
     public CrossServerServiceImpl(ServerState server){this.server = server;}
-    
+
     @Override
     public void propagateState(PropagateStateRequest request, StreamObserver<PropagateStateResponse> responseObserver){
-        ServerState.OperationResult result = server.updateState(request.getState());
-        if(result == ServerState.OperationResult.SERVER_OFF){
-            responseObserver.onError(UNAVAILABLE.withDescription("Secondary server is unavailable").asRuntimeException());
-        }
-        else{
-            PropagateStateResponse response = PropagateStateResponse.getDefaultInstance();
-            responseObserver.onNext(response);
-            responseObserver.onCompleted();
-        }
+        server.updateState(request.getState(), request.getReplicaTs());
+        PropagateStateResponse response = PropagateStateResponse.getDefaultInstance();
+        responseObserver.onNext(response);
+        responseObserver.onCompleted();
     }
 }

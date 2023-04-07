@@ -7,7 +7,7 @@ import pt.tecnico.distledger.server.domain.operation.CreateOp;
 import pt.tecnico.distledger.server.domain.operation.DeleteOp;
 import pt.tecnico.distledger.server.domain.operation.Operation;
 import pt.tecnico.distledger.server.domain.operation.TransferOp;
-import pt.tecnico.distledger.vectorclock.VectorClock;
+import pt.tecnico.distledger.server.domain.VectorClock;
 import pt.ulisboa.tecnico.distledger.contract.DistLedgerCommonDefinitions;
 import pt.ulisboa.tecnico.distledger.contract.NamingServerDistLedger.LookupRequest;
 import pt.ulisboa.tecnico.distledger.contract.NamingServerDistLedger.LookupResponse;
@@ -15,7 +15,6 @@ import pt.ulisboa.tecnico.distledger.contract.NamingServerDistLedger.RegisterReq
 import pt.ulisboa.tecnico.distledger.contract.NamingServerServiceGrpc;
 import pt.ulisboa.tecnico.distledger.contract.distledgerserver.DistLedgerCrossServerServiceGrpc;
 import pt.ulisboa.tecnico.distledger.contract.distledgerserver.PropagateStateRequest;
-import pt.tecnico.distledger.vectorclock.VectorClock;
 
 import java.util.ArrayList;
 import java.util.HashMap;
@@ -84,7 +83,7 @@ public class ServerState {
         shutdownNamingServerChannel();
         if (result.getServerCount() == 0)
             return false;
-        result.getServerList().forEach(sv -> this.serverTargets.add(sv.getServerTarget()));
+        result.getServerList().stream().filter(sv -> sv.getQualifier().charAt(0) != this.serverQualifier).forEach(sv -> this.serverTargets.add(sv.getServerTarget()));
         return true;
     }
 
@@ -224,6 +223,12 @@ public class ServerState {
         return ledger;
     }
 
+    public AdminOperationResult gossip(){
+        if(propagateState())
+            return AdminOperationResult.OK;
+        return AdminOperationResult.REPLICAS_UNREACHABLE;
+    }
+
     public boolean propagateState() {
         if (!createChannelsAndStubsReplicas()) {
             return false;
@@ -235,7 +240,7 @@ public class ServerState {
                                         .newBuilder().addAllLedger(ledger.stream()
                                                 .map(Operation::getOperationMessageFormat)
                                                 .collect(Collectors.toList()))
-                                        .build()).setReplicaTS(DistLedgerCommonDefinitions.Timestamp.newBuilder()
+                                        .build()).setReplicaTs(DistLedgerCommonDefinitions.Timestamp.newBuilder()
                                 .addAllTimestamp(replicaTs.getTimestamps()).build()).build()));
                 this.serverChannels.forEach(ManagedChannel::shutdownNow);
                 return true;
@@ -244,37 +249,44 @@ public class ServerState {
             }
         }
     }
-
     private void registerOperation(DistLedgerCommonDefinitions.Operation operation) {
         if (operation.getType() == DistLedgerCommonDefinitions.OperationType.OP_CREATE_ACCOUNT)
             userAccounts.put(operation.getUserId(), 0);
-        else if (operation.getType() == DistLedgerCommonDefinitions.OperationType.OP_DELETE_ACCOUNT)
-            userAccounts.remove(operation.getUserId());
         else if (operation.getType() == DistLedgerCommonDefinitions.OperationType.OP_TRANSFER_TO) {
             userAccounts.put(operation.getUserId(), userAccounts.get(operation.getUserId()) - operation.getAmount());
             userAccounts.put(operation.getDestUserId(), userAccounts.get(operation.getDestUserId()) + operation.getAmount());
         }
     }
+    public void updateState(DistLedgerCommonDefinitions.LedgerState ledgerState, DistLedgerCommonDefinitions.Timestamp timestampReplicaTs) {
+        ledgerState.getLedgerList().forEach(operation -> {
+            if(!replicaTs.greaterEqual(operation.getTS().getTimestampList())){
+                Operation op;
+                if(operation.getType() == DistLedgerCommonDefinitions.OperationType.OP_CREATE_ACCOUNT){
+                    op = new CreateOp(operation.getUserId());
+                }
+                else{
+                    op = new TransferOp(operation.getUserId(), operation.getDestUserId(), operation.getAmount());
+                }
+                op.setTS(new VectorClock(operation.getTS().getTimestampList()));
+                op.setPrev(new VectorClock(operation.getPrevTS().getTimestampList()));
 
-    public OperationResult updateState(DistLedgerCommonDefinitions.LedgerState ledgerState) {
-        if (!this.serverAvailable)
-            return OperationResult.SERVER_OFF;
-        this.ledger.clear();
-        this.ledger.addAll(ledgerState.getLedgerList().stream()
-                .map(op -> {
-                    DistLedgerCommonDefinitions.OperationType type = op.getType();
-                    if (type == DistLedgerCommonDefinitions.OperationType.OP_CREATE_ACCOUNT) {
-                        return new CreateOp(op.getUserId());
-                    } else if (type == DistLedgerCommonDefinitions.OperationType.OP_DELETE_ACCOUNT) {
-                        return new DeleteOp(op.getUserId());
-                    } else {
-                        return new TransferOp(op.getUserId(), op.getDestUserId(), op.getAmount());
-                    }
-                })
-                .collect(Collectors.toList()));
+                if(replicaTs.greaterEqual(op.getTS().getTimestamps())){
+                    op.setStableTrue();
+                    registerOperation(operation);
+                    valueTs.merge(new VectorClock(op.getTS().getTimestamps()));
+                }
+                ledger.add(op);
 
-        registerOperation(ledgerState.getLedger(ledgerState.getLedgerCount() - 1));
-        return OperationResult.OK;
+            }
+        });
+        replicaTs.merge(new VectorClock(timestampReplicaTs.getTimestampList()));
+        ledger.forEach(operation -> {
+            if(valueTs.greaterEqual(operation.getPrev().getTimestamps())  && !operation.getStable()){
+                operation.setStableTrue();
+                registerOperation(operation.getOperationMessageFormat());
+                valueTs.merge(operation.getTS());
+            }
+        });
     }
 
     public enum OperationResult {
@@ -296,6 +308,7 @@ public class ServerState {
         OK,
         SERVER_ALREADY_ACTIVE,
         SERVER_ALREADY_INACTIVE,
-        OUT_OF_DATE
+        OUT_OF_DATE,
+        REPLICAS_UNREACHABLE
     }
 }

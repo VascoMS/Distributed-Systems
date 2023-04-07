@@ -1,6 +1,6 @@
 package pt.tecnico.distledger.server.domain.operation;
 
-import pt.tecnico.distledger.vectorclock.VectorClock;
+import pt.tecnico.distledger.server.domain.VectorClock;
 import pt.ulisboa.tecnico.distledger.contract.DistLedgerCommonDefinitions;
 
 public class Operation {

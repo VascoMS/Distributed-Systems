@@ -2,6 +2,7 @@ package pt.tecnico.distledger.server.domain;
 
 import javax.swing.*;
 import java.util.ArrayList;
+import java.util.Collections;
 import java.util.List;
 import java.util.stream.IntStream;
 
@@ -9,7 +10,7 @@ public class VectorClock {
     private final List<Integer> timestamps;
 
     public VectorClock(){
-        timestamps = new ArrayList<>();
+        timestamps = new ArrayList<Integer>(Collections.nCopies(3, 0));
     }
 
     public VectorClock(List<Integer> vc){timestamps = new ArrayList<>(vc);}

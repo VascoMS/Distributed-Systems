@@ -8,10 +8,7 @@ import pt.ulisboa.tecnico.distledger.contract.user.*;
 import pt.ulisboa.tecnico.distledger.contract.NamingServerServiceGrpc;
 import pt.ulisboa.tecnico.distledger.contract.NamingServerDistLedger.*;
 
-import java.util.ArrayList;
-import java.util.HashMap;
-import java.util.List;
-import java.util.Map;
+import java.util.*;
 
 
 public class UserService {
@@ -20,7 +17,7 @@ public class UserService {
     private ManagedChannel channel;
     private UserServiceGrpc.UserServiceBlockingStub stub;
     private final Map<String, String> targets = new HashMap<>();
-    private final List<Integer> prev = new ArrayList<>();
+    private final List<Integer> prev = new ArrayList<Integer>(Collections.nCopies(3, 0));
 
     public void createChannelAndStub(String target) {
         this.channel = ManagedChannelBuilder.forTarget(target).usePlaintext().build();
@@ -56,8 +53,8 @@ public class UserService {
         try{
            BalanceResponse response = stub.balance(BalanceRequest.newBuilder().setUserId(username)
                    .setPrev(Timestamp.newBuilder().addAllTimestamp(this.prev)).build());
-           this.prev.clear();
-           this.prev.addAll(response.getNew().getTimestampList());
+
+           merge(response.getNew().getTimestampList());
            System.out.println("OK");
            System.out.println(response);
 
@@ -91,5 +88,11 @@ public class UserService {
         }
         createChannelAndStub(targets.get(qualifier));
         return true;
+    }
+    public void merge(List<Integer> v){
+        for(int i = 0; i < prev.size(); i++){
+            if(v.get(i) > prev.get(i))
+                prev.set(i, v.get(i));
+        }
     }
 }

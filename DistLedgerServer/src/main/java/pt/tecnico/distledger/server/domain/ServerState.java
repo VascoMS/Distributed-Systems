@@ -16,10 +16,7 @@ import pt.ulisboa.tecnico.distledger.contract.NamingServerServiceGrpc;
 import pt.ulisboa.tecnico.distledger.contract.distledgerserver.DistLedgerCrossServerServiceGrpc;
 import pt.ulisboa.tecnico.distledger.contract.distledgerserver.PropagateStateRequest;
 
-import java.util.ArrayList;
-import java.util.HashMap;
-import java.util.List;
-import java.util.Map;
+import java.util.*;
 import java.util.stream.Collectors;
 
 public class ServerState {
@@ -210,15 +207,6 @@ public class ServerState {
         }
     }
 
-    public AdminOperationResult ledgerStateVerification(List<Integer> prev) {
-        if (!valueTs.greaterEqual(prev)) {
-            return AdminOperationResult.OUT_OF_DATE;
-        }
-        else {
-            return AdminOperationResult.OK;
-        }
-    }
-
     public List<Operation> getLedger() {
         return ledger;
     }
@@ -280,7 +268,9 @@ public class ServerState {
             }
         });
         replicaTs.merge(new VectorClock(timestampReplicaTs.getTimestampList()));
-        ledger.forEach(operation -> {
+        //ordenar
+
+        ledger.stream().sorted(new VectorComparator()).forEach(operation -> {
             if(valueTs.greaterEqual(operation.getPrev().getTimestamps())  && !operation.getStable()){
                 operation.setStableTrue();
                 registerOperation(operation.getOperationMessageFormat());

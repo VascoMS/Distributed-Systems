@@ -52,21 +52,15 @@ public class AdminServiceImpl extends AdminServiceGrpc.AdminServiceImplBase {
 
     @Override
     public synchronized void getLedgerState(getLedgerStateRequest request, StreamObserver<getLedgerStateResponse> responseObserver) {
-        ServerState.AdminOperationResult result = server.ledgerStateVerification(request.getPrev().getTimestampList());
-        if(result == ServerState.AdminOperationResult.OUT_OF_DATE){
-            responseObserver.onError(UNAVAILABLE.withDescription("Awaiting synchronization").asRuntimeException());
-        }
-        else {
-            DistLedgerCommonDefinitions.LedgerState ledgerState = DistLedgerCommonDefinitions.LedgerState.newBuilder()
-                    .addAllLedger(server.getLedger().stream().map(Operation::getOperationMessageFormat)
-                            .collect(Collectors.toList())).build();
-            VectorClock valueTS = server.getValueTs();
-            getLedgerStateResponse response = getLedgerStateResponse.newBuilder().setLedgerState(ledgerState).setNew(DistLedgerCommonDefinitions.Timestamp.newBuilder().addAllTimestamp(valueTS.getTimestamps()).build()).build();
-            // Send a single response through the stream.
-            responseObserver.onNext(response);
-            // Notify the client that the operation has been completed.
-            responseObserver.onCompleted();
-        }
+        DistLedgerCommonDefinitions.LedgerState ledgerState = DistLedgerCommonDefinitions.LedgerState.newBuilder()
+                .addAllLedger(server.getLedger().stream().map(Operation::getOperationMessageFormat)
+                        .collect(Collectors.toList())).build();
+        VectorClock valueTS = server.getValueTs();
+        getLedgerStateResponse response = getLedgerStateResponse.newBuilder().setLedgerState(ledgerState).build();
+        // Send a single response through the stream.
+        responseObserver.onNext(response);
+        // Notify the client that the operation has been completed.
+        responseObserver.onCompleted();
     }
 
     @Override

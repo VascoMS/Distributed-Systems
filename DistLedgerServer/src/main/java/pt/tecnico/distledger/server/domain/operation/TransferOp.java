@@ -2,6 +2,8 @@ package pt.tecnico.distledger.server.domain.operation;
 
 import pt.ulisboa.tecnico.distledger.contract.DistLedgerCommonDefinitions;
 
+import java.util.List;
+
 public class TransferOp extends Operation {
     private String destAccount;
     private int amount;
@@ -29,10 +31,15 @@ public class TransferOp extends Operation {
     }
 
     @Override
-    public DistLedgerCommonDefinitions.Operation getOperationMessageFormat(){
+    public DistLedgerCommonDefinitions.Operation getOperationMessageFormat(List<Integer> prevTS, List<Integer> TS){
         return DistLedgerCommonDefinitions.Operation.newBuilder()
-                .setType(DistLedgerCommonDefinitions.OperationType.OP_TRANSFER_TO).setUserId(getAccount())
-                .setAmount(amount).setDestUserId(destAccount).build();
+                .setType(DistLedgerCommonDefinitions.OperationType.OP_TRANSFER_TO)
+                .setUserId(getAccount())
+                .setAmount(amount)
+                .setDestUserId(destAccount)
+                .setPrevTS(DistLedgerCommonDefinitions.Timestamp.newBuilder().addAllTimestamp(prevTS).build())
+                .setTS(DistLedgerCommonDefinitions.Timestamp.newBuilder().addAllTimestamp(TS).build())
+                .build();
     }
 
     @Override

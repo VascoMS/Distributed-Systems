@@ -53,7 +53,7 @@ public class AdminServiceImpl extends AdminServiceGrpc.AdminServiceImplBase {
     @Override
     public synchronized void getLedgerState(getLedgerStateRequest request, StreamObserver<getLedgerStateResponse> responseObserver) {
         DistLedgerCommonDefinitions.LedgerState ledgerState = DistLedgerCommonDefinitions.LedgerState.newBuilder()
-                .addAllLedger(server.getLedger().stream().map(Operation::getOperationMessageFormat)
+                .addAllLedger(server.getLedger().stream().map(Op -> Op.getOperationMessageFormat(Op.getPrev().getTimestamps(), Op.getTS().getTimestamps()))
                         .collect(Collectors.toList())).build();
         VectorClock valueTS = server.getValueTs();
         getLedgerStateResponse response = getLedgerStateResponse.newBuilder().setLedgerState(ledgerState).build();

@@ -27,9 +27,9 @@ public class ServerState {
     private final char serverQualifier;
     private ManagedChannel namingServerChannel;
     private NamingServerServiceGrpc.NamingServerServiceBlockingStub namingServerStub;
-    private final List<DistLedgerCrossServerServiceGrpc.DistLedgerCrossServerServiceBlockingStub> serverStubs;
+    private final Map<String, DistLedgerCrossServerServiceGrpc.DistLedgerCrossServerServiceBlockingStub> serverStubs;
     private final List<String> serverTargets;
-    private final List<ManagedChannel> serverChannels;
+    private final Map<String, ManagedChannel> serverChannels;
     private boolean serverAvailable;
 
 
@@ -44,8 +44,8 @@ public class ServerState {
         String serverTarget = "localhost:" + port;
         this.serverQualifier = qualifier.charAt(0);
         this.serverTargets = new ArrayList<>();
-        this.serverStubs = new ArrayList<>();
-        this.serverChannels = new ArrayList<>();
+        this.serverStubs = new HashMap<>();
+        this.serverChannels = new HashMap<>();
 
         createChannelAndStubNamingServer();
         try {
@@ -80,7 +80,10 @@ public class ServerState {
         shutdownNamingServerChannel();
         if (result.getServerCount() == 0)
             return false;
-        result.getServerList().stream().filter(sv -> sv.getQualifier().charAt(0) != this.serverQualifier).forEach(sv -> this.serverTargets.add(sv.getServerTarget()));
+        result.getServerList().stream()
+                .filter(sv -> sv.getQualifier().charAt(0) != this.serverQualifier)
+                .filter(sv -> !serverTargets.contains(sv.getServerTarget()))
+                .forEach(sv -> this.serverTargets.add(sv.getServerTarget()));
         return true;
     }
 
@@ -90,8 +93,8 @@ public class ServerState {
         }
         serverTargets.forEach(svTg -> {
             ManagedChannel channel = ManagedChannelBuilder.forTarget(svTg).usePlaintext().build();
-            serverChannels.add(channel);
-            serverStubs.add(DistLedgerCrossServerServiceGrpc.newBlockingStub(channel));
+            serverChannels.put(svTg, channel);
+            serverStubs.put(svTg, DistLedgerCrossServerServiceGrpc.newBlockingStub(channel));
         });
         return true;
     }
@@ -120,7 +123,7 @@ public class ServerState {
             op.setPrev(new VectorClock(prev));
             if(this.valueTs.greaterEqual(prev)){
                 op.setStableTrue();
-                valueTs.merge(op.getTS());
+                valueTs.merge(new VectorClock(op.getTS().getTimestamps()));
                 userAccounts.put(username, 0);
             }
             ledger.add(op);
@@ -156,11 +159,11 @@ public class ServerState {
         }
         TransferOp op = new TransferOp(from, to, amount);
         this.replicaTs.increment(getId());
-        op.setTS(this.replicaTs);
+        op.setTS(new VectorClock(this.replicaTs.getTimestamps()));
         op.setPrev(new VectorClock(prev));
         if(this.valueTs.greaterEqual(prev)){
             op.setStableTrue();
-            valueTs.merge(op.getTS());
+            valueTs.merge(new VectorClock(op.getTS().getTimestamps()));
             userAccounts.put(from, userAccounts.get(from) - amount);
             userAccounts.put(to, userAccounts.get(to) + amount);
         }
@@ -222,15 +225,15 @@ public class ServerState {
             return false;
         } else {
             try {
-                serverStubs.forEach(svStub -> svStub.propagateState(PropagateStateRequest
+                serverStubs.forEach((svTg, stub) -> stub.propagateState(PropagateStateRequest
                         .newBuilder().setState(
                                 DistLedgerCommonDefinitions.LedgerState
                                         .newBuilder().addAllLedger(ledger.stream()
-                                                .map(Operation::getOperationMessageFormat)
+                                                .map(Op -> Op.getOperationMessageFormat(Op.getPrev().getTimestamps(), Op.getTS().getTimestamps()))
                                                 .collect(Collectors.toList()))
                                         .build()).setReplicaTs(DistLedgerCommonDefinitions.Timestamp.newBuilder()
                                 .addAllTimestamp(replicaTs.getTimestamps()).build()).build()));
-                this.serverChannels.forEach(ManagedChannel::shutdownNow);
+                this.serverChannels.forEach((svTg, channel) -> channel.shutdownNow());
                 return true;
             } catch (StatusRuntimeException e) {
                 return false;
@@ -258,7 +261,7 @@ public class ServerState {
                 op.setTS(new VectorClock(operation.getTS().getTimestampList()));
                 op.setPrev(new VectorClock(operation.getPrevTS().getTimestampList()));
 
-                if(replicaTs.greaterEqual(op.getTS().getTimestamps())){
+                if(valueTs.greaterEqual(op.getPrev().getTimestamps())){
                     op.setStableTrue();
                     registerOperation(operation);
                     valueTs.merge(new VectorClock(op.getTS().getTimestamps()));
@@ -268,13 +271,11 @@ public class ServerState {
             }
         });
         replicaTs.merge(new VectorClock(timestampReplicaTs.getTimestampList()));
-        //ordenar
-
-        ledger.stream().sorted(new VectorComparator()).forEach(operation -> {
-            if(valueTs.greaterEqual(operation.getPrev().getTimestamps())  && !operation.getStable()){
+        ledger.forEach(operation -> {
+            if(valueTs.greaterEqual(operation.getPrev().getTimestamps()) && !operation.getStable()){
                 operation.setStableTrue();
-                registerOperation(operation.getOperationMessageFormat());
-                valueTs.merge(operation.getTS());
+                registerOperation(operation.getOperationMessageFormat(operation.getPrev().getTimestamps(), operation.getTS().getTimestamps()));
+                valueTs.merge(new VectorClock(operation.getTS().getTimestamps()));
             }
         });
     }
@@ -298,7 +299,6 @@ public class ServerState {
         OK,
         SERVER_ALREADY_ACTIVE,
         SERVER_ALREADY_INACTIVE,
-        OUT_OF_DATE,
         REPLICAS_UNREACHABLE
     }
 }

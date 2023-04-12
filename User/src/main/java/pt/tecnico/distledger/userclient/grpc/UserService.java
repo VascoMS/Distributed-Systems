@@ -31,7 +31,9 @@ public class UserService {
 
     public void createAccount(String username) {
         try{
-            CreateAccountResponse response = stub.createAccount(CreateAccountRequest.newBuilder().setUserId(username).build());
+            CreateAccountResponse response = stub.createAccount(CreateAccountRequest.newBuilder().setUserId(username).setPrev(Timestamp.newBuilder().addAllTimestamp(prev).build()).build());
+
+            merge(response.getNew().getTimestampList());
             System.out.println("OK");
             System.out.println(response);
         } catch (StatusRuntimeException e) {
@@ -52,7 +54,7 @@ public class UserService {
     public void balance(String username) {
         try{
            BalanceResponse response = stub.balance(BalanceRequest.newBuilder().setUserId(username)
-                   .setPrev(Timestamp.newBuilder().addAllTimestamp(this.prev)).build());
+                   .setPrev(Timestamp.newBuilder().addAllTimestamp(prev).build()).build());
 
            merge(response.getNew().getTimestampList());
            System.out.println("OK");
@@ -66,9 +68,15 @@ public class UserService {
     public void transferTo(String from, String dest, int amount) {
         try{
             TransferToResponse response = stub.transferTo(TransferToRequest.newBuilder().setAccountFrom(from)
-                    .setAccountTo(dest).setAmount(amount).build());
+                    .setAccountTo(dest)
+                    .setAmount(amount)
+                    .setPrev(Timestamp.newBuilder().addAllTimestamp(prev).build())
+                    .build());
+
+            merge(response.getNew().getTimestampList());
             System.out.println("OK");
             System.out.println(response);
+
         } catch (StatusRuntimeException e) {
             System.out.println(e.getStatus().getDescription());
         }
@@ -89,8 +97,8 @@ public class UserService {
         createChannelAndStub(targets.get(qualifier));
         return true;
     }
-    public void merge(List<Integer> v){
-        for(int i = 0; i < prev.size(); i++){
+    public void merge(List<Integer> v) {
+        for(int i = 0; i < prev.size(); i++) {
             if(v.get(i) > prev.get(i))
                 prev.set(i, v.get(i));
         }
